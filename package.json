@@ -1,0 +1,41 @@
+{
+    "name": "mol-mini-app",
+    "private": true,
+    "version": "0.1.0",
+    "type": "module",
+    "scripts": {
+        "dev": "vite --mode mol",
+        "dev:mol": "vite --mode mol",
+        "build": "vite build --mode mol",
+        "build:mol": "vite build --mode mol",
+        "preview": "vite preview --port 8080",
+        "check": "svelte-check --tsconfig ./tsconfig.app.json",
+        "lint": "prettier --check \"src/**/*.{ts,svelte,css}\"",
+        "format": "prettier --write \"src/**/*.{ts,svelte,css}\"",
+        "test": "vitest run",
+        "coverage": "vitest run --coverage"
+    },
+    "devDependencies": {
+        "@sveltejs/vite-plugin-svelte": "^6.2.1",
+        "@tailwindcss/vite": "^4.1.13",
+        "@testing-library/jest-dom": "^6.6.3",
+        "@testing-library/svelte": "^5.2.6",
+        "@tsconfig/svelte": "^5.0.4",
+        "jsdom": "^25.0.1",
+        "prettier": "^3.4.2",
+        "prettier-plugin-svelte": "^3.3.3",
+        "svelte": "^5.39.0",
+        "svelte-check": "^4.3.3",
+        "tailwindcss": "^4.1.13",
+        "typescript": "^5.7.3",
+        "vite": "^7.1.5",
+        "vitest": "^3.2.4"
+    },
+    "dependencies": {
+        "axios": "^1.12.2",
+        "clsx": "^2.1.1",
+        "phosphor-svelte": "^3.0.1",
+        "svelte-spa-router": "^4.0.1",
+        "tailwind-merge": "^3.3.1"
+    }
+}

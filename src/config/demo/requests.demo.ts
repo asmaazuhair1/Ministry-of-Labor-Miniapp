@@ -1,0 +1,196 @@
+import type { RequestDetail, RequestSummary } from "@/types/requests";
+
+/** DEMO transactions covering every status so the UI states are all exercised. */
+export const REQUEST_DETAILS: RequestDetail[] = [
+    {
+        id: "req-1001",
+        reference: "SP-2026-100045",
+        serviceId: "sp-cash-assistance",
+        serviceTitle: "إعانة الحماية الاجتماعية",
+        serviceIcon: "hand-coins",
+        categoryId: "social-protection",
+        status: "audit",
+        submittedAt: "2026-11-02T09:20:00",
+        stages: [
+            { key: "audit", title: "التدقيق", state: "current", date: "2026-11-02T09:20:00" },
+            { key: "data-review", title: "تدقيق البيانات والمستندات", state: "upcoming" },
+            { key: "result", title: "النتيجة النهائية", state: "upcoming" },
+        ],
+        formData: [
+            { label: "الاسم الرباعي واللقب", value: "محمد علي حسن الجبوري" },
+            { label: "رقم الهوية الوطنية", value: "199012345678" },
+            { label: "عدد أفراد الأسرة", value: "٥" },
+            { label: "نوع السكن", value: "إيجار" },
+        ],
+        documents: [{ name: "صورة الهوية الوطنية", fileName: "id-card.jpg" }],
+        payment: null,
+        messages: [
+            {
+                id: "m1",
+                title: "تم استلام الطلب",
+                body: "طلبك قيد التدقيق الأولي من قبل الموظف المختص.",
+                date: "2026-11-02T09:25:00",
+            },
+        ],
+    },
+    {
+        id: "req-1002",
+        reference: "EMP-2026-205512",
+        serviceId: "emp-contract",
+        serviceTitle: "توثيق عقد عمل في القطاع الخاص",
+        serviceIcon: "file-text",
+        categoryId: "employment",
+        status: "payment",
+        submittedAt: "2026-10-28T11:00:00",
+        stages: [
+            { key: "audit", title: "التدقيق", state: "done", date: "2026-10-28T11:10:00" },
+            { key: "payment", title: "الدفع", state: "current", date: "2026-10-29T08:00:00" },
+            { key: "data-review", title: "تدقيق البيانات والمستندات", state: "upcoming" },
+            { key: "result", title: "النتيجة النهائية", state: "upcoming" },
+        ],
+        formData: [
+            { label: "اسم صاحب العمل / الشركة", value: "شركة الرافدين للمقاولات" },
+            { label: "المسمى الوظيفي", value: "فني كهرباء" },
+            { label: "الأجر الشهري", value: "٧٥٠٬٠٠٠ د.ع" },
+        ],
+        documents: [{ name: "نسخة من العقد", fileName: "contract.pdf" }],
+        payment: { amount: 10000, currency: "IQD", paid: false, label: "رسم توثيق تقديري (تجريبي)" },
+        messages: [
+            {
+                id: "m1",
+                title: "بانتظار الدفع",
+                body: "اكتمل التدقيق. يرجى إكمال عملية الدفع لمتابعة معاملتك.",
+                date: "2026-10-29T08:05:00",
+            },
+        ],
+    },
+    {
+        id: "req-1003",
+        reference: "DIS-2026-300781",
+        serviceId: "dis-card",
+        serviceTitle: "إصدار بطاقة ذوي الإعاقة",
+        serviceIcon: "identification-card",
+        categoryId: "disability",
+        status: "data-review",
+        submittedAt: "2026-10-25T10:30:00",
+        stages: [
+            { key: "audit", title: "التدقيق", state: "done", date: "2026-10-25T10:40:00" },
+            { key: "data-review", title: "تدقيق البيانات والمستندات", state: "current", date: "2026-10-27T09:00:00" },
+            { key: "result", title: "النتيجة النهائية", state: "upcoming" },
+        ],
+        formData: [
+            { label: "الاسم الرباعي واللقب", value: "سارة قاسم محمود العبيدي" },
+            { label: "نوع الإعاقة", value: "حركية" },
+        ],
+        documents: [
+            { name: "صورة التقرير الطبي", fileName: "medical-report.pdf" },
+            { name: "صورة شخصية", fileName: "photo.jpg" },
+        ],
+        payment: null,
+        messages: [
+            {
+                id: "m1",
+                title: "جارٍ تدقيق المستندات",
+                body: "يتم حالياً مطابقة التقرير الطبي مع سجلات اللجنة الطبية.",
+                date: "2026-10-27T09:05:00",
+            },
+        ],
+    },
+    {
+        id: "req-1004",
+        reference: "EMP-2026-204410",
+        serviceId: "emp-jobseeker",
+        serviceTitle: "تسجيل باحث عن عمل",
+        serviceIcon: "user-focus",
+        categoryId: "employment",
+        status: "completed",
+        submittedAt: "2026-10-18T08:15:00",
+        stages: [
+            { key: "audit", title: "المراجعة", state: "done", date: "2026-10-18T08:20:00" },
+            { key: "result", title: "النتيجة", state: "done", date: "2026-10-18T08:30:00" },
+        ],
+        formData: [
+            { label: "الاسم الرباعي واللقب", value: "علي عبد الله كريم الساعدي" },
+            { label: "التحصيل الدراسي", value: "دبلوم" },
+            { label: "الاختصاص أو المهنة", value: "تبريد وتكييف" },
+        ],
+        documents: [],
+        payment: null,
+        messages: [
+            {
+                id: "m1",
+                title: "تم التسجيل بنجاح",
+                body: "تم إدراجك ضمن قاعدة بيانات الباحثين عن عمل. رقمك المرجعي EMP-2026-204410.",
+                date: "2026-10-18T08:31:00",
+            },
+        ],
+    },
+    {
+        id: "req-1005",
+        reference: "SP-2026-100988",
+        serviceId: "sp-grievance",
+        serviceTitle: "تظلم على قرار الحماية الاجتماعية",
+        serviceIcon: "scales",
+        categoryId: "social-protection",
+        status: "rejected",
+        submittedAt: "2026-10-10T12:00:00",
+        stages: [
+            { key: "audit", title: "التدقيق", state: "done", date: "2026-10-10T12:10:00" },
+            { key: "data-review", title: "تدقيق البيانات والمستندات", state: "done", date: "2026-10-14T09:00:00" },
+            { key: "result", title: "النتيجة النهائية", state: "done", date: "2026-10-20T10:00:00" },
+        ],
+        formData: [{ label: "أسباب التظلم", value: "إعادة النظر في قرار إيقاف الراتب." }],
+        documents: [],
+        payment: null,
+        messages: [
+            {
+                id: "m1",
+                title: "نتيجة التظلم",
+                body: "بعد الدراسة، تقرر عدم تغيير القرار السابق لعدم استيفاء الشروط. يمكنك مراجعة الدائرة للمزيد.",
+                date: "2026-10-20T10:05:00",
+            },
+        ],
+    },
+    {
+        id: "req-1006",
+        reference: "VT-2026-400233",
+        serviceId: "vt-enroll",
+        serviceTitle: "التسجيل في دورة تدريب مهني",
+        serviceIcon: "toolbox",
+        categoryId: "vocational-training",
+        status: "action-required",
+        submittedAt: "2026-10-30T13:45:00",
+        stages: [
+            { key: "audit", title: "التدقيق", state: "done", date: "2026-10-30T14:00:00" },
+            { key: "payment", title: "الدفع", state: "done", date: "2026-10-31T09:00:00" },
+            { key: "data-review", title: "تدقيق البيانات والمستندات", state: "current", date: "2026-11-01T09:00:00" },
+            { key: "result", title: "النتيجة النهائية", state: "upcoming" },
+        ],
+        formData: [
+            { label: "المسار التدريبي", value: "الكهرباء" },
+            { label: "مركز التدريب المفضل", value: "مركز بغداد للتدريب المهني" },
+        ],
+        documents: [{ name: "صورة شخصية", fileName: "photo.jpg" }],
+        payment: { amount: 5000, currency: "IQD", paid: true, label: "رسم تسجيل تقديري (تجريبي)" },
+        messages: [
+            {
+                id: "m1",
+                title: "مطلوب استكمال مستند",
+                body: "الصورة الشخصية غير واضحة. يرجى رفع صورة حديثة بخلفية بيضاء لإكمال التدقيق.",
+                date: "2026-11-01T09:10:00",
+            },
+        ],
+    },
+];
+
+export const REQUEST_SUMMARIES: RequestSummary[] = REQUEST_DETAILS.map((r) => ({
+    id: r.id,
+    reference: r.reference,
+    serviceId: r.serviceId,
+    serviceTitle: r.serviceTitle,
+    serviceIcon: r.serviceIcon,
+    categoryId: r.categoryId,
+    status: r.status,
+    submittedAt: r.submittedAt,
+    stages: r.stages,
+}));

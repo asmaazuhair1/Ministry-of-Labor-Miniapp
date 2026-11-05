@@ -1,0 +1,132 @@
+@import url("https://fonts.googleapis.com/css2?family=Almarai:wght@400;700;800&display=swap");
+@import "tailwindcss";
+
+@theme {
+    /* Brand — Ministry of Labour & Social Affairs identity (teal + gold). */
+    --color-primary: #0f766e;
+    --color-primary-hover: #0c5f58;
+    --color-primary-container: #cdece7;
+    --color-on-primary: #ffffff;
+
+    --color-secondary: #b4883b;
+    --color-secondary-container: #f3e6cf;
+    --color-on-secondary: #ffffff;
+
+    --color-tertiary: #1f4e5f;
+    --color-tertiary-container: #d2e3e9;
+    --color-on-tertiary: #ffffff;
+
+    /* Surfaces */
+    --color-surface: #f6f8f7;
+    --color-surface-container: #ffffff;
+    --color-surface-container-high: #eef2f1;
+    --color-surface-container-highest: #e4eae8;
+    --color-on-surface: #111b19;
+    --color-on-surface-variant: #52625f;
+    --color-on-surface-muted: #8a9893;
+
+    /* Outlines */
+    --color-outline: #c7d3d0;
+    --color-outline-variant: #e4eae8;
+
+    /* Status tokens */
+    --color-info: #2563eb;
+    --color-info-container: #dbe7fe;
+    --color-payment: #ea580c;
+    --color-payment-container: #fde3d3;
+    --color-review: #7c3aed;
+    --color-review-container: #ece0fd;
+    --color-success: #16a34a;
+    --color-success-container: #d6f3e0;
+    --color-danger: #dc2626;
+    --color-danger-container: #fcdcdc;
+    --color-warning: #d97706;
+    --color-warning-container: #fceccf;
+
+    /* Typography */
+    --font-sans: "Almarai", system-ui, sans-serif;
+    --default-font-family: "Almarai", system-ui, sans-serif;
+
+    /* Elevation */
+    --shadow-soft: 0 2px 12px rgba(17, 27, 25, 0.06);
+    --shadow-card: 0 1px 3px rgba(17, 27, 25, 0.06), 0 1px 2px rgba(17, 27, 25, 0.04);
+    --shadow-float: 0 10px 40px rgba(17, 27, 25, 0.18);
+
+    /* Radii */
+    --radius-card: 1.25rem;
+    --radius-field: 0.875rem;
+}
+
+* {
+    -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+    margin: 0;
+    background: var(--color-surface);
+    color: var(--color-on-surface);
+    font-family: var(--font-sans);
+}
+
+body {
+    overscroll-behavior-y: none;
+}
+
+/* Centered mobile viewport on larger screens. */
+.app-viewport {
+    width: 100%;
+    max-width: 480px;
+    margin-inline: auto;
+    background: var(--color-surface);
+    position: relative;
+}
+
+.no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+@keyframes fade-up {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes sheet-up {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-up {
+    animation: fade-up 0.35s ease both;
+}
+
+.animate-sheet {
+    animation: sheet-up 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+        scroll-behavior: auto !important;
+    }
+}
