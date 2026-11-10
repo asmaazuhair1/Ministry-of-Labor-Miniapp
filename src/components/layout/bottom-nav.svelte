@@ -4,6 +4,15 @@
     import SafeArea from "@/components/safe-area.svelte";
     import { appConfig } from "@/config/app.config";
 
+    // Map item count → an explicit grid-cols class (literal strings so Tailwind
+    // keeps them in the build).
+    const GRID_COLS: Record<number, string> = {
+        3: "grid-cols-3",
+        4: "grid-cols-4",
+        5: "grid-cols-5",
+    };
+    const gridColsClass = GRID_COLS[appConfig.bottomNav.length] ?? "grid-cols-4";
+
     function isActive(path: string, current: string): boolean {
         if (path === "/") return current === "/";
         return current === path || current.startsWith(`${path}/`);
@@ -19,7 +28,7 @@
         class="pointer-events-auto w-full max-w-[480px] bg-surface-container border-t border-outline-variant shadow-soft"
         aria-label="التنقل الرئيسي"
     >
-        <ul class="grid grid-cols-4">
+        <ul class="grid {gridColsClass}">
             {#each appConfig.bottomNav as item (item.path)}
                 {@const active = isActive(item.path, $location)}
                 <li>

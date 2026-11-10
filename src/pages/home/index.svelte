@@ -6,7 +6,7 @@
     import ServiceCard from "@/components/cards/service-card.svelte";
     import Skeleton from "@/components/loading/skeleton.svelte";
     import AnnouncementSlider from "./components/announcement-slider.svelte";
-    import NewsCard from "./components/news-card.svelte";
+    import NewsCard from "@/components/cards/news-card.svelte";
     import { createQuery } from "@/hooks/create-query.svelte";
     import { getCategories, getServices } from "@/pages/services/service";
     import { getAnnouncements, getNews } from "./service";
@@ -44,30 +44,27 @@
 </script>
 
 <div class="pb-4 animate-fade-up">
-    <section class="px-4 pt-4 pb-5 bg-primary text-on-primary rounded-b-[2rem]">
-        <p class="text-[13px] text-on-primary/80">أهلاً بك</p>
-        <h1 class="mt-0.5 text-xl font-extrabold">{DEMO_USER.firstName}</h1>
-        <div class="mt-3 flex items-center gap-1.5 rounded-full bg-white/15 w-fit px-3 py-1.5">
-            <AppIcon name="shield-check" size={15} weight="fill" />
-            <span class="text-[11px] font-bold">{DEMO_USER.beneficiaryStatus}</span>
-        </div>
-
-        <div class="mt-4 grid grid-cols-2 gap-3">
+    <section class="px-4 pt-4 pb-5 bg-white border-b border-outline-variant">
+        <div class="flex items-center justify-between gap-4">
+            <div class="flex items-center gap-4 min-w-0">
+                <span
+                    class="grid place-items-center shrink-0 w-16 h-16 rounded-2xl bg-white shadow-soft ring-1 ring-outline-variant p-2"
+                >
+                    <img src="/logo.png" alt="شعار الوزارة" class="w-full h-full object-contain" />
+                </span>
+                <div class="min-w-0">
+                    <p class="text-[13px] text-on-surface-variant">أهلاً بك</p>
+                    <h1 class="mt-0.5 text-xl font-extrabold truncate text-on-surface">{DEMO_USER.firstName}</h1>
+                </div>
+            </div>
             <button
                 type="button"
-                onclick={() => push("/services")}
-                class="flex items-center gap-2 rounded-field bg-white/15 px-3.5 py-3 text-start active:bg-white/25 transition"
+                onclick={() => push("/notifications")}
+                aria-label="الإشعارات"
+                class="relative grid place-items-center shrink-0 w-11 h-11 rounded-full bg-surface-container border border-outline-variant text-on-surface shadow-card active:scale-95 transition"
             >
-                <AppIcon name="squares-four" size={22} weight="fill" />
-                <span class="text-[13px] font-bold">الخدمات</span>
-            </button>
-            <button
-                type="button"
-                onclick={() => push("/requests")}
-                class="flex items-center gap-2 rounded-field bg-white/15 px-3.5 py-3 text-start active:bg-white/25 transition"
-            >
-                <AppIcon name="files" size={22} weight="fill" />
-                <span class="text-[13px] font-bold">طلباتي</span>
+                <AppIcon name="bell" size={21} weight="regular" />
+                <span class="absolute top-2.5 end-3 w-2 h-2 rounded-full bg-danger ring-2 ring-surface"></span>
             </button>
         </div>
     </section>
@@ -115,7 +112,7 @@
     </section>
 
     <section class="px-4 mt-7">
-        <SectionHeader title="أخبار الوزارة" />
+        <SectionHeader title="أخبار الوزارة" actionLabel="الكل" onAction={() => push("/news")} />
         {#if newsQuery.isLoading}
             <div class="flex flex-col gap-3">
                 {#each Array(3) as _, i (i)}

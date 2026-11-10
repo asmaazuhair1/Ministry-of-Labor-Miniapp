@@ -36,6 +36,7 @@ export const appConfig: AppConfig = {
     bottomNav: [
         { label: "الرئيسية", path: "/", icon: "house" },
         { label: "الخدمات", path: "/services", icon: "squares-four" },
+        { label: "الأخبار", path: "/news", icon: "newspaper" },
         { label: "طلباتي", path: "/requests", icon: "files" },
         { label: "حسابي", path: "/account", icon: "user-circle" },
     ],

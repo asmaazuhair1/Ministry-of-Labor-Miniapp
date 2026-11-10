@@ -9,6 +9,7 @@ import RequestDetailsPage from "@/pages/requests/details.svelte";
 import AccountPage from "@/pages/account/index.svelte";
 import EditProfilePage from "@/pages/account/edit.svelte";
 import NotificationsPage from "@/pages/notifications/index.svelte";
+import NewsListPage from "@/pages/news/index.svelte";
 import NewsDetailsPage from "@/pages/home/news.svelte";
 import NotFoundPage from "@/pages/not-found/index.svelte";
 
@@ -151,6 +152,18 @@ export const routes: RouteConfig[] = [
             showLogo: false,
             showBell: false,
             pageTitle: "الإشعارات",
+        },
+    },
+    {
+        path: "/news",
+        component: NewsListPage,
+        layout: {
+            showLayout: true,
+            showBottomNav: true,
+            showBackButton: false,
+            showLogo: false,
+            showBell: false,
+            pageTitle: "الأخبار",
         },
     },
     {

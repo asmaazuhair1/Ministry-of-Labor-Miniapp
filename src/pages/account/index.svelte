@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { push } from "svelte-spa-router";
     import AppIcon from "@/components/app-icon.svelte";
     import PageLoading from "@/components/loading/page-loading.svelte";
     import { createQuery } from "@/hooks/create-query.svelte";
@@ -20,24 +19,16 @@
             : "",
     );
 
-    const accountLinks: { label: string; icon: string; action: () => void }[] = [
-        { label: "تعديل البيانات الشخصية", icon: "pencil", action: () => push("/account/edit") },
-        { label: "الإشعارات", icon: "bell", action: () => push("/notifications") },
-        { label: "طلباتي", icon: "files", action: () => push("/requests") },
+    let language = $state<"ar" | "ku">("ar");
+
+    const settings: { label: string; subtitle: string; icon: string }[] = [
+        { label: "مركز المساعدة", subtitle: "إجابات سريعة", icon: "life-buoy" },
+        { label: "سياسة الخصوصية", subtitle: "حماية بياناتك", icon: "lock" },
+        { label: "الشروط والأحكام", subtitle: "شروط الاستخدام", icon: "file-text" },
     ];
 
     function notYet(label: string) {
         showAlert({ variant: "info", title: label, message: "هذه الميزة غير متاحة في النسخة التجريبية." });
-    }
-
-    function confirmLogout() {
-        showAlert({
-            variant: "warning",
-            title: "تسجيل الخروج",
-            message: "هل تريد تسجيل الخروج من الحساب؟ (تجريبي)",
-            confirmLabel: "تسجيل الخروج",
-            cancelLabel: "إلغاء",
-        });
     }
 </script>
 
@@ -70,65 +61,76 @@
             </div>
         </section>
 
-        {#each profile.sections as section (section.key)}
-            <section class="px-4">
-                <h2 class="flex items-center gap-2 text-[13px] font-extrabold text-on-surface-variant mb-2.5">
-                    <AppIcon name={section.icon} size={17} class="text-primary" />
-                    {section.title}
-                </h2>
-                <dl
-                    class="rounded-card bg-surface-container border border-outline-variant divide-y divide-outline-variant shadow-card overflow-hidden"
-                >
-                    {#each section.fields as field (field.label)}
-                        <div class="flex items-center justify-between gap-4 px-4 py-3">
-                            <dt class="text-[12.5px] text-on-surface-muted">{field.label}</dt>
-                            <dd class="text-[13px] font-bold text-on-surface text-end">{field.value}</dd>
-                        </div>
-                    {/each}
-                </dl>
-            </section>
-        {/each}
+        <section class="px-4 flex flex-col gap-4">
+            <!-- Language picker -->
+            <div class="rounded-card bg-surface-container border border-outline-variant shadow-card p-4">
+                <div class="flex items-center gap-3">
+                    <span class="grid place-items-center w-10 h-10 shrink-0 rounded-xl bg-surface-container-highest">
+                        <AppIcon name="translate" size={20} class="text-on-surface-variant" />
+                    </span>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-[13px] font-bold text-on-surface">اللغة</p>
+                        <p class="text-[11px] text-on-surface-muted">{language === "ar" ? "العربية" : "الكوردية"}</p>
+                    </div>
+                </div>
+                <div class="mt-3 grid grid-cols-2 gap-1 rounded-field bg-surface-container-high p-1">
+                    <button
+                        type="button"
+                        onclick={() => (language = "ar")}
+                        class="rounded-[0.6rem] py-2 text-[12px] font-bold transition {language === 'ar'
+                            ? 'bg-surface-container text-primary shadow-card'
+                            : 'text-on-surface-variant'}"
+                    >
+                        عربي
+                    </button>
+                    <button
+                        type="button"
+                        onclick={() => (language = "ku")}
+                        class="rounded-[0.6rem] py-2 text-[12px] font-bold transition {language === 'ku'
+                            ? 'bg-surface-container text-primary shadow-card'
+                            : 'text-on-surface-variant'}"
+                    >
+                        کوردی
+                    </button>
+                </div>
+            </div>
 
-        <section class="px-4">
-            <h2 class="text-[13px] font-extrabold text-on-surface-variant mb-2.5">إدارة الحساب</h2>
+            <!-- Help / Privacy / Terms -->
             <div
                 class="rounded-card bg-surface-container border border-outline-variant divide-y divide-outline-variant shadow-card overflow-hidden"
             >
-                {#each accountLinks as link (link.label)}
+                {#each settings as item (item.label)}
                     <button
                         type="button"
-                        onclick={link.action}
-                        class="w-full flex items-center gap-3 px-4 py-3.5 text-start active:bg-surface-container-high transition"
+                        onclick={() => notYet(item.label)}
+                        class="w-full flex items-center gap-3 px-4 py-3 text-start active:bg-surface-container-high transition"
                     >
-                        <AppIcon name={link.icon} size={20} class="text-on-surface-variant shrink-0" />
-                        <span class="flex-1 text-[13px] font-bold text-on-surface">{link.label}</span>
-                        <AppIcon name="caret-left" size={17} class="text-on-surface-muted" />
+                        <span
+                            class="grid place-items-center w-10 h-10 shrink-0 rounded-xl bg-surface-container-highest"
+                        >
+                            <AppIcon name={item.icon} size={19} class="text-on-surface-variant" />
+                        </span>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-[13px] font-bold text-on-surface">{item.label}</p>
+                            <p class="text-[11px] text-on-surface-muted truncate">{item.subtitle}</p>
+                        </div>
+                        <AppIcon name="caret-left" size={16} class="text-on-surface-muted shrink-0" />
                     </button>
                 {/each}
-                <button
-                    type="button"
-                    onclick={() => notYet("اللغة")}
-                    class="w-full flex items-center gap-3 px-4 py-3.5 text-start active:bg-surface-container-high transition"
-                >
-                    <AppIcon name="translate" size={20} class="text-on-surface-variant shrink-0" />
-                    <span class="flex-1 text-[13px] font-bold text-on-surface">لغة التطبيق</span>
-                    <span class="text-[12px] text-on-surface-muted">العربية</span>
-                </button>
             </div>
-        </section>
 
-        <section class="px-4">
-            <button
-                type="button"
-                onclick={confirmLogout}
-                class="w-full flex items-center justify-center gap-2 rounded-field bg-danger-container py-3.5 text-sm font-bold text-danger active:opacity-90 transition"
+            <!-- About -->
+            <div
+                class="rounded-card bg-surface-container border border-outline-variant shadow-card px-4 py-3 flex items-center gap-3"
             >
-                <AppIcon name="sign-out" size={19} weight="bold" />
-                تسجيل الخروج
-            </button>
-            <p class="mt-4 text-center text-[11px] text-on-surface-muted leading-relaxed">
-                نسخة تجريبية — جميع البيانات لأغراض العرض فقط.
-            </p>
+                <span class="grid place-items-center w-10 h-10 shrink-0 rounded-xl bg-surface-container-highest">
+                    <AppIcon name="info" size={19} class="text-on-surface-variant" />
+                </span>
+                <div class="flex-1 min-w-0">
+                    <p class="text-[13px] font-bold text-on-surface">حول التطبيق</p>
+                    <p class="text-[11px] text-on-surface-muted">الإصدار 1.0.0</p>
+                </div>
+            </div>
         </section>
     </div>
 {/if}

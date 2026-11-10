@@ -81,6 +81,9 @@
         DownloadSimple,
         ShieldStar,
         HourglassMedium,
+        DotsThree,
+        ShareNetwork,
+        ArrowClockwise,
     } from "phosphor-svelte";
 
     const ICONS: Record<string, Component> = {
@@ -164,6 +167,9 @@
         download: DownloadSimple,
         "shield-star": ShieldStar,
         hourglass: HourglassMedium,
+        "dots-three": DotsThree,
+        share: ShareNetwork,
+        reload: ArrowClockwise,
     };
 
     export function hasIcon(name: string): boolean {

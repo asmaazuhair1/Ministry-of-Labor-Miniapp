@@ -4,7 +4,6 @@
     import BottomNav from "@/components/layout/bottom-nav.svelte";
     import Alert from "@/components/alert.svelte";
     import { buildRouteMap, getLayoutForRoute } from "@/config/routes.utils";
-    import { appConfig } from "@/config/app.config";
 
     const routeMap = buildRouteMap();
     const layout = $derived(getLayoutForRoute($location));
@@ -19,12 +18,6 @@
 </script>
 
 <div class="app-viewport flex flex-col min-h-screen">
-    {#if appConfig.features.demoMode}
-        <div class="bg-tertiary text-on-tertiary text-[11px] font-bold text-center py-1 tracking-wide">
-            نسخة تجريبية — البيانات والخدمات لأغراض العرض فقط
-        </div>
-    {/if}
-
     {#if layout.showLayout}
         <AppHeader {layout} />
     {/if}
