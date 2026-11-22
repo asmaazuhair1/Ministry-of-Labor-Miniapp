@@ -108,10 +108,5 @@
                 {/each}
             </div>
         </section>
-
-        <footer class="flex flex-col items-center gap-2 pt-2 text-center" in:rise={{ delay: stagger(2) }}>
-            <img src="/logo.png" alt="" class="w-10 h-10 object-contain opacity-80" />
-            <p class="text-caption text-on-surface-muted">وزارة العمل والشؤون الاجتماعية · الإصدار 1.0.0</p>
-        </footer>
     </div>
 {/if}
