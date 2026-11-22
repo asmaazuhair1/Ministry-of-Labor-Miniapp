@@ -1,87 +1,68 @@
 <script lang="ts">
-    import { push } from "svelte-spa-router";
-    import AppIcon from "@/components/app-icon.svelte";
+    import { flip } from "svelte/animate";
     import EmptyState from "@/components/empty-state.svelte";
+    import Button from "@/components/ui/button.svelte";
+    import CountUp from "@/components/ui/count-up.svelte";
+    import NotificationRow from "./components/notification-row.svelte";
     import { notifications, unreadCount, markAsRead, markAllAsRead } from "@/store/notifications-state";
-    import { formatRelativeArabic } from "@/utils/format.util";
-    import type { NotificationKind } from "@/types/notifications";
+    import { arabicCountNoun } from "@/utils/format.util";
+    import { duration, easing, fadeIn, reducedMotion, rise, stagger } from "@/utils/motion";
+    import { go } from "@/utils/navigation";
+    import type { AppNotification } from "@/types/notifications";
 
-    const KIND_ICON: Record<NotificationKind, string> = {
-        submission: "file-text",
-        "status-change": "arrow-right",
-        "payment-request": "wallet",
-        "payment-confirmed": "check-circle",
-        "missing-documents": "warning-circle",
-        approved: "check-circle",
-        rejected: "x-circle",
-        announcement: "megaphone",
-    };
+    const sorted = $derived(
+        $notifications.slice().sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+    );
+    const fresh = $derived(sorted.filter((n) => !n.read));
+    const earlier = $derived(sorted.filter((n) => n.read));
 
-    const KIND_COLOR: Record<NotificationKind, string> = {
-        submission: "bg-info-container text-info",
-        "status-change": "bg-info-container text-info",
-        "payment-request": "bg-payment-container text-payment",
-        "payment-confirmed": "bg-success-container text-success",
-        "missing-documents": "bg-warning-container text-warning",
-        approved: "bg-success-container text-success",
-        rejected: "bg-danger-container text-danger",
-        announcement: "bg-tertiary-container text-tertiary",
-    };
+    const FORMS: [string, string, string, string] = ["إشعار جديد", "إشعارات جديدة", "إشعارات جديدة", "إشعاراً جديداً"];
+    const flipOptions = () => ({ duration: reducedMotion() ? 0 : duration("slow"), easing: easing("standard") });
 
-    function open(id: string, requestId?: string) {
-        markAsRead(id);
-        if (requestId) push(`/requests/${requestId}`);
+    function open(item: AppNotification) {
+        markAsRead(item.id);
+        if (item.requestId) go(`/requests/${item.requestId}`);
     }
 </script>
 
-<div class="py-4 animate-fade-up">
-    {#if $notifications.length === 0}
-        <EmptyState title="لا توجد إشعارات" description="ستظهر هنا تحديثات معاملاتك وإعلانات الوزارة." />
+<div class="px-gutter pt-5 pb-8">
+    {#if sorted.length === 0}
+        <EmptyState icon="bell" title="كل شيء هادئ" description="ستظهر هنا تحديثات معاملاتك وإعلانات الوزارة." />
     {:else}
-        {#if $unreadCount > 0}
-            <div class="px-4 mb-3 flex justify-end">
-                <button
-                    type="button"
-                    onclick={markAllAsRead}
-                    class="text-[12px] font-bold text-primary active:opacity-70 transition"
-                >
-                    تعليم الكل كمقروء
-                </button>
+        <!-- Moment -->
+        <section class="flex items-end justify-between gap-3" in:rise>
+            <div class="flex items-end gap-3">
+                <span class="text-display text-primary leading-none"><CountUp value={$unreadCount} /></span>
+                <span class="pb-0.5 text-headline text-on-surface">
+                    {$unreadCount === 0 ? "لا جديد" : arabicCountNoun($unreadCount, FORMS)}
+                </span>
             </div>
+            {#if $unreadCount > 0}
+                <Button variant="ghost" class="-me-3 h-11 px-3" onclick={markAllAsRead}>تعليم الكل كمقروء</Button>
+            {/if}
+        </section>
+        {#if $unreadCount > 0}
+            <p class="mt-2 text-caption text-on-surface-muted">اسحب الإشعار جانباً لتعليمه كمقروء.</p>
         {/if}
 
-        <ul class="px-4 flex flex-col gap-2.5">
-            {#each $notifications as item (item.id)}
-                <li>
-                    <button
-                        type="button"
-                        onclick={() => open(item.id, item.requestId)}
-                        class="w-full flex items-start gap-3 rounded-card border p-3.5 text-start shadow-card transition active:scale-[0.99] {item.read
-                            ? 'bg-surface-container border-outline-variant'
-                            : 'bg-primary-container/40 border-primary-container'}"
-                    >
-                        <span class="grid place-items-center w-10 h-10 shrink-0 rounded-full {KIND_COLOR[item.kind]}">
-                            <AppIcon name={KIND_ICON[item.kind]} size={20} weight="fill" />
-                        </span>
-                        <span class="flex-1 min-w-0">
-                            <span class="flex items-center gap-2">
-                                <span class="flex-1 text-[13px] font-extrabold text-on-surface leading-snug"
-                                    >{item.title}</span
-                                >
-                                {#if !item.read}
-                                    <span class="w-2 h-2 shrink-0 rounded-full bg-primary"></span>
-                                {/if}
-                            </span>
-                            <span class="mt-1 block text-[12.5px] leading-relaxed text-on-surface-variant"
-                                >{item.body}</span
+        <!-- Two groups (proximity). Reading an item moves it: fades out of "new", rises into "earlier". -->
+        {#each [{ title: "جديدة", items: fresh, offset: 1 }, { title: "سابقة", items: earlier, offset: fresh.length + 1 }] as group (group.title)}
+            {#if group.items.length}
+                <section class="mt-6">
+                    <h2 class="mb-3 text-label text-on-surface-muted">{group.title}</h2>
+                    <ul class="flex flex-col gap-3">
+                        {#each group.items as item, i (item.id)}
+                            <li
+                                animate:flip={flipOptions()}
+                                in:rise={{ delay: stagger(i + group.offset) }}
+                                out:fadeIn={{ duration: duration("fast") }}
                             >
-                            <span class="mt-1.5 block text-[11px] text-on-surface-muted"
-                                >{formatRelativeArabic(item.date)}</span
-                            >
-                        </span>
-                    </button>
-                </li>
-            {/each}
-        </ul>
+                                <NotificationRow {item} onOpen={open} onRead={markAsRead} />
+                            </li>
+                        {/each}
+                    </ul>
+                </section>
+            {/if}
+        {/each}
     {/if}
 </div>

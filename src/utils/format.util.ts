@@ -41,3 +41,39 @@ export function formatRelativeArabic(value: string | Date): string {
     if (Math.abs(days) < 30) return rtf.format(days, "day");
     return formatArabicDate(d);
 }
+
+/**
+ * Arabic noun–number agreement for a count shown separately as a big number.
+ * forms: [one, two, few (3–10), many (11+ and 0)].
+ */
+export function arabicCountNoun(count: number, forms: [string, string, string, string]): string {
+    const n = Math.abs(Math.trunc(count));
+    if (n === 1) return forms[0];
+    if (n === 2) return forms[1];
+    if (n >= 3 && n <= 10) return forms[2];
+    return forms[3];
+}
+
+/** Day of month only, e.g. ٣ */
+export function formatArabicDay(value: string | Date): string {
+    return new Intl.DateTimeFormat(LOCALE, { day: "numeric" }).format(toDate(value));
+}
+
+/** Month name only, e.g. تشرين الثاني */
+export function formatArabicMonth(value: string | Date): string {
+    return new Intl.DateTimeFormat(LOCALE, { month: "long" }).format(toDate(value));
+}
+
+/** Estimated reading time in whole minutes (≥1) at ~180 Arabic words per minute. */
+export function readingMinutes(text: string): number {
+    const words = text.trim().split(/\s+/).filter(Boolean).length;
+    return Math.max(1, Math.round(words / 180));
+}
+
+/** e.g. "قراءة في دقيقة" / "٣ دقائق قراءة" */
+export function readingLabel(text: string): string {
+    const n = readingMinutes(text);
+    if (n === 1) return "قراءة في دقيقة";
+    if (n === 2) return "قراءة في دقيقتين";
+    return `${formatArabicNumber(n)} ${n <= 10 ? "دقائق" : "دقيقة"} قراءة`;
+}

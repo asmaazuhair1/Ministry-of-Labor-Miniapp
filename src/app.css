@@ -1,7 +1,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Almarai:wght@400;700;800&display=swap");
 @import "tailwindcss";
 
-@theme {
+@theme static {
     /* Brand — Ministry of Labour & Social Affairs identity (teal + gold). */
     --color-primary: #0f766e;
     --color-primary-hover: #0c5f58;
@@ -47,14 +47,74 @@
     --font-sans: "Almarai", system-ui, sans-serif;
     --default-font-family: "Almarai", system-ui, sans-serif;
 
-    /* Elevation */
-    --shadow-soft: 0 2px 12px rgba(17, 27, 25, 0.06);
-    --shadow-card: 0 1px 3px rgba(17, 27, 25, 0.06), 0 1px 2px rgba(17, 27, 25, 0.04);
-    --shadow-float: 0 10px 40px rgba(17, 27, 25, 0.18);
+    /* Overlay */
+    --color-scrim: rgb(17 27 25 / 0.4);
+    --color-pattern: rgb(15 118 110 / 0.08);
 
-    /* Radii */
-    --radius-card: 1.25rem;
-    --radius-field: 0.875rem;
+    /* Type scale — Naseej, compact (max 3 levels per screen, nothing under 12px). */
+    --text-display: 28px;
+    --text-display--line-height: 34px;
+    --text-display--font-weight: 800;
+    --text-title-1: 22px;
+    --text-title-1--line-height: 28px;
+    --text-title-1--font-weight: 800;
+    --text-title-2: 18px;
+    --text-title-2--line-height: 24px;
+    --text-title-2--font-weight: 800;
+    --text-headline: 15px;
+    --text-headline--line-height: 21px;
+    --text-headline--font-weight: 700;
+    --text-body: 13px;
+    --text-body--line-height: 20px;
+    --text-label: 12px;
+    --text-label--line-height: 17px;
+    --text-label--font-weight: 700;
+    --text-caption: 12px;
+    --text-caption--line-height: 16px;
+
+    /* Spacing rhythm (4-based; Tailwind's 0.25rem step already matches). */
+    --spacing-gutter: 20px;
+    --spacing-section: 32px;
+
+    /* Elevation — solid layered surfaces, no glow. */
+    --shadow-e1: 0 1px 2px rgb(17 27 25 / 0.04), 0 1px 3px rgb(17 27 25 / 0.06);
+    --shadow-e2: 0 4px 16px rgb(17 27 25 / 0.08);
+    --shadow-e3: 0 10px 32px rgb(17 27 25 / 0.14);
+    --shadow-e4: 0 -8px 40px rgb(17 27 25 / 0.18);
+    /* Legacy aliases (kept so existing screens don't break during migration). */
+    --shadow-card: var(--shadow-e1);
+    --shadow-soft: var(--shadow-e2);
+    --shadow-float: var(--shadow-e3);
+
+    /* Radii — one rule for the whole app: every corner is 12px.
+       (Circles stay rounded-full; arch shapes keep their own geometry.) */
+    --radius-chip: 12px;
+    --radius-frame: 12px;
+    --radius-field: 12px;
+    --radius-card: 12px;
+    --radius-hero: 12px;
+    --radius-pill: 12px;
+    --radius-arch-base: 12px;
+    /* Tailwind's larger defaults follow the same rule. */
+    --radius-xl: 12px;
+    --radius-2xl: 12px;
+    --radius-3xl: 12px;
+
+    /* Motion — durations */
+    --duration-instant: 100ms;
+    --duration-fast: 180ms;
+    --duration-base: 260ms;
+    --duration-slow: 420ms;
+    --duration-hero: 600ms;
+    --duration-stagger: 40ms;
+    /* How long each hero story stays on screen (a dwell time, not a transition). */
+    --duration-story: 5000ms;
+
+    /* Motion — easings */
+    --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+    --ease-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1);
+    --ease-accelerate: cubic-bezier(0.3, 0, 0.8, 0.15);
+    --ease-spring: cubic-bezier(0.34, 1.3, 0.64, 1);
 }
 
 * {
@@ -113,11 +173,121 @@ body {
 }
 
 .animate-fade-up {
-    animation: fade-up 0.35s ease both;
+    animation: fade-up var(--duration-slow) var(--ease-decelerate) both;
 }
 
 .animate-sheet {
-    animation: sheet-up 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: sheet-up var(--duration-base) var(--ease-decelerate) both;
+}
+
+/* ---- Naseej primitives ------------------------------------------------ */
+
+/* Signature arch frame: a Baghdadi window — round top, softly squared base. */
+@utility shape-arch {
+    /* Percent radii (not 9999px) so the browser doesn't scale the base corners to zero. */
+    border-radius: 50% 50% var(--radius-arch-base) var(--radius-arch-base) / 42% 42% var(--radius-arch-base)
+        var(--radius-arch-base);
+}
+
+/* Gate: a tall doorway arch for large tiles (category cards). */
+@utility shape-gate {
+    border-radius: 50% 50% var(--radius-card) var(--radius-card) / 40% 40% var(--radius-card) var(--radius-card);
+}
+
+/* Press feedback for every tappable surface: scale .97 + shadow settles one level. */
+@utility pressable {
+    transition:
+        transform var(--duration-instant) var(--ease-standard),
+        box-shadow var(--duration-fast) var(--ease-standard),
+        background-color var(--duration-fast) var(--ease-standard);
+    &:active {
+        transform: scale(0.97);
+    }
+}
+
+/* Calm shimmer for skeletons (transform-only, GPU friendly). */
+@keyframes shimmer {
+    from {
+        transform: translateX(100%);
+    }
+    to {
+        transform: translateX(-100%);
+    }
+}
+
+@keyframes story-fill {
+    from {
+        transform: scaleX(0);
+    }
+    to {
+        transform: scaleX(1);
+    }
+}
+
+@keyframes shake {
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+    20%,
+    60% {
+        transform: translateX(-6px);
+    }
+    40%,
+    80% {
+        transform: translateX(6px);
+    }
+}
+
+.animate-shake {
+    animation: shake var(--duration-fast) var(--ease-standard) 2;
+}
+
+/* ---- Page transitions (View Transitions API) -------------------------
+ * RTL: going forward, the new page arrives from the left; going back, from
+ * the right. Header and bottom nav are named so they stay put. */
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation-duration: var(--duration-slow);
+    animation-timing-function: var(--ease-decelerate);
+}
+@keyframes vt-in-from-left {
+    from {
+        opacity: 0;
+        transform: translateX(-24px);
+    }
+}
+@keyframes vt-in-from-right {
+    from {
+        opacity: 0;
+        transform: translateX(24px);
+    }
+}
+@keyframes vt-fade-out {
+    to {
+        opacity: 0;
+    }
+}
+html[data-nav="forward"]::view-transition-new(root) {
+    animation-name: vt-in-from-left;
+}
+html[data-nav="back"]::view-transition-new(root) {
+    animation-name: vt-in-from-right;
+}
+html[data-nav="forward"]::view-transition-old(root),
+html[data-nav="back"]::view-transition-old(root) {
+    animation-name: vt-fade-out;
+    animation-duration: var(--duration-fast);
+    animation-timing-function: var(--ease-accelerate);
+}
+html[data-nav="tab"]::view-transition-old(root),
+html[data-nav="tab"]::view-transition-new(root) {
+    animation-duration: var(--duration-base);
+}
+/* Shared elements (e.g. service icon → service page) morph with the spring-ish curve. */
+::view-transition-group(*) {
+    animation-duration: var(--duration-slow);
+    animation-timing-function: var(--ease-standard);
 }
 
 @media (prefers-reduced-motion: reduce) {

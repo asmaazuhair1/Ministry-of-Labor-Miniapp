@@ -2,23 +2,24 @@ import type { UserProfile } from "@/types/profile";
 
 /** DEMO signed-in citizen profile. */
 export const DEMO_USER: UserProfile = {
-    fullName: "محمد علي حسن الجبوري",
-    firstName: "محمد",
+    fullName: "أسماء زهير",
+    firstName: "أسماء زهير",
     nationalId: "199012345678",
+    phone: "0776654129",
     avatarColor: "primary",
     verified: true,
-    beneficiaryStatus: "مستفيد من شبكة الحماية الاجتماعية",
+    beneficiaryStatus: "مستفيدة من شبكة الحماية الاجتماعية",
     sections: [
         {
             key: "personal",
             title: "المعلومات الشخصية",
             icon: "identification-card",
             fields: [
-                { label: "الاسم الرباعي واللقب", value: "محمد علي حسن الجبوري" },
+                { label: "الاسم الرباعي واللقب", value: "أسماء زهير" },
                 { label: "رقم الهوية الوطنية", value: "199012345678" },
                 { label: "تاريخ الميلاد", value: "1990-05-14" },
-                { label: "الجنس", value: "ذكر" },
-                { label: "الحالة الاجتماعية", value: "متزوج" },
+                { label: "الجنس", value: "أنثى" },
+                { label: "الحالة الاجتماعية", value: "متزوجة" },
             ],
         },
         {
@@ -26,8 +27,8 @@ export const DEMO_USER: UserProfile = {
             title: "معلومات الاتصال",
             icon: "phone",
             fields: [
-                { label: "رقم الهاتف", value: "07701234567" },
-                { label: "البريد الإلكتروني", value: "m.aljabouri@example.iq" },
+                { label: "رقم الهاتف", value: "0776654129" },
+                { label: "البريد الإلكتروني", value: "asmaa.zuhair@example.iq" },
             ],
         },
         {

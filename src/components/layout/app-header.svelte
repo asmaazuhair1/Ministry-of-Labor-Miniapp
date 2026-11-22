@@ -1,5 +1,6 @@
 <script lang="ts">
-    import { pop, location } from "svelte-spa-router";
+    import { location } from "svelte-spa-router";
+    import { back } from "@/utils/navigation";
     import AppIcon from "@/components/app-icon.svelte";
     import SafeArea from "@/components/safe-area.svelte";
     import BottomSheet from "@/components/bottom-sheet.svelte";
@@ -31,7 +32,7 @@
         "transition active:bg-surface-container motion-safe:active:scale-95 motion-reduce:transition-none";
 
     function goBack() {
-        pop();
+        back();
     }
 
     function closeApp() {
@@ -62,7 +63,7 @@
     }
 </script>
 
-<SafeArea top class="sticky top-0 z-30 bg-surface border-b border-outline-variant">
+<SafeArea top class="sticky top-0 z-30 bg-surface border-b border-outline-variant [view-transition-name:app-header]">
     <header class="flex items-center gap-1 h-16 ps-4 pe-4">
         <!-- START side (right in RTL): back arrow always visible -->
         <button

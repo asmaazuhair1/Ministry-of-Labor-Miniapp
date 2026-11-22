@@ -1,16 +1,34 @@
 <script lang="ts">
-    import { push, replace } from "svelte-spa-router";
+    import { tick } from "svelte";
     import AppIcon from "@/components/app-icon.svelte";
     import EmptyState from "@/components/empty-state.svelte";
-    import PageLoading from "@/components/loading/page-loading.svelte";
-    import FormField from "./components/form-field.svelte";
-    import { formatCurrencyIQD } from "@/utils/format.util";
+    import Skeleton from "@/components/loading/skeleton.svelte";
+    import SafeArea from "@/components/safe-area.svelte";
+    import Button from "@/components/ui/button.svelte";
+    import CountUp from "@/components/ui/count-up.svelte";
+    import IconFrame from "@/components/ui/icon-frame.svelte";
+    import Sheet from "@/components/ui/sheet.svelte";
+    import SuccessMark from "@/components/ui/success-mark.svelte";
+    import { fieldClass } from "./components/field-styles";
+    import FileUpload from "./components/file-upload.svelte";
+    import SearchableSelect from "./components/searchable-select.svelte";
+    import ChoiceOption from "./components/choice-option.svelte";
+    import LocationPicker, { type PickedLocation } from "./components/location-picker.svelte";
     import { createQuery } from "@/hooks/create-query.svelte";
-    import { showAlert } from "@/store/alert-state";
-    import { getServiceById, submitApplication, type ApplicationResult } from "./service";
-    import { useFormState } from "./use-form-state.svelte";
-    import { buildApplicationPayload } from "./helpers";
-    import type { ServiceDetail } from "@/types/services";
+    import { rise, stagger } from "@/utils/motion";
+    import { back, go, goReplace } from "@/utils/navigation";
+    import { haptic } from "@/utils/superqi.util";
+    import { convertArabicToEnglishNumbers } from "@/utils/arabic-to-english-numbers";
+    import { getCategories, getServiceById, submitApplication, type ApplicationResult } from "./service";
+    import {
+        BASE_FEE,
+        EDUCATION_OPTIONS,
+        LEGAL_PLEDGE_TEXT,
+        PRIOR_PLEDGE_OPTIONS,
+        SPECIALTIES,
+        WORKERS_OPTION,
+    } from "@/config/demo/application-form.demo";
+    import type { ServiceCategory, ServiceDetail } from "@/types/services";
 
     interface Props {
         params?: { serviceId?: string };
@@ -21,212 +39,456 @@
         key: "service-apply",
         fetcher: () => getServiceById(params?.serviceId ?? ""),
     });
+    const categoriesQuery = createQuery<ServiceCategory[]>({ key: "categories", fetcher: getCategories });
     const service = $derived(query.data ?? null);
+    const categoryTitle = $derived((categoriesQuery.data ?? []).find((c) => c.id === service?.categoryId)?.title ?? "");
 
-    type Step = "form" | "payment" | "done";
-    let step = $state<Step>("form");
-    let submitting = $state(false);
-    let accepted = $state<boolean[]>([]);
-    let declarationError = $state(false);
-    let result = $state<ApplicationResult | null>(null);
+    // ---- Form definition -------------------------------------------------
+    const PROJECT_ADDRESS = [
+        { name: "projectArea", label: "عنوان المشروع / اسم المنطقة", placeholder: "" },
+        { name: "projectMahalla", label: "عنوان المشروع / المحلة", placeholder: "محلة" },
+        { name: "projectZuqaq", label: "عنوان المشروع / الزقاق", placeholder: "زقاق" },
+        { name: "projectNumber", label: "عنوان المشروع / رقم", placeholder: "رقم" },
+    ];
+    const OWNER_ADDRESS = [
+        { name: "ownerArea", label: "عنوان صاحب المشروع / المنطقة", placeholder: "" },
+        { name: "ownerMahalla", label: "عنوان صاحب المشروع / المحلة", placeholder: "محلة" },
+        { name: "ownerZuqaq", label: "عنوان صاحب المشروع / الزقاق", placeholder: "زقاق" },
+        { name: "ownerNumber", label: "عنوان صاحب المشروع / رقم", placeholder: "رقم" },
+    ];
+    const ID_FILES = [
+        { name: "nationalIdFront", label: "البطاقة الوطنية وجه امامي" },
+        { name: "nationalIdBack", label: "البطاقة الوطنية وجه خلفي" },
+        { name: "residenceFront", label: "بطاقة السكن وجه امامي" },
+        { name: "residenceBack", label: "بطاقة السكن وجه خلفي" },
+        { name: "leaseContract", label: "عقد الايجار او وصل جباية" },
+    ];
+    const TEXT_FIELDS = ["phone", "projectName", "specialty", "ownerName", "birthDate"].concat(
+        PROJECT_ADDRESS.map((f) => f.name),
+        OWNER_ADDRESS.map((f) => f.name),
+    );
+    const FILE_FIELDS = [...ID_FILES.map((f) => f.name), "educationProof"];
 
-    let form = $state<ReturnType<typeof useFormState> | null>(null);
+    // ---- Form state ------------------------------------------------------
+    let values = $state<Record<string, string>>(Object.fromEntries(TEXT_FIELDS.map((n) => [n, ""])));
+    let files = $state<Record<string, File | null>>(Object.fromEntries(FILE_FIELDS.map((n) => [n, null])));
+    let location = $state<PickedLocation | null>(null);
+    let priorPledge = $state("");
+    let education = $state("");
+    let hasWorkers = $state(false);
+    let legalPledge = $state(false);
+    let errors = $state<Record<string, string>>({});
 
-    $effect(() => {
-        if (service && !form) {
-            form = useFormState(service.schema);
-            accepted = service.declarations.map(() => false);
-        }
-    });
+    const total = $derived(
+        BASE_FEE +
+            (PRIOR_PLEDGE_OPTIONS.find((o) => o.value === priorPledge)?.fee ?? 0) +
+            (EDUCATION_OPTIONS.find((o) => o.value === education)?.fee ?? 0) +
+            (hasWorkers ? (WORKERS_OPTION.fee ?? 0) : 0),
+    );
 
-    const allAccepted = $derived(accepted.length > 0 && accepted.every(Boolean));
-
-    function toggleDeclaration(index: number) {
-        accepted[index] = !accepted[index];
-        if (allAccepted) declarationError = false;
+    function setValue(name: string, value: string) {
+        values[name] = value;
+        if (errors[name]) delete errors[name];
     }
 
-    async function handleSubmit() {
-        if (!service || !form) return;
-        const valid = form.validateAll();
-        if (!allAccepted) declarationError = true;
-        if (!valid || !allAccepted) return;
+    function setFile(name: string, file: File | null) {
+        files[name] = file;
+        if (errors[name]) delete errors[name];
+    }
 
-        if (service.fee) {
-            step = "payment";
+    function validate(): Record<string, string> {
+        const next: Record<string, string> = {};
+        const required = "هذا الحقل مطلوب";
+        for (const name of TEXT_FIELDS) {
+            if (!values[name].trim()) next[name] = required;
+        }
+        const phone = convertArabicToEnglishNumbers(values.phone).replace(/\s/g, "").replace(/^0/, "");
+        if (phone && !/^7\d{9}$/.test(phone)) next.phone = "رقم هاتف غير صحيح (مثال: 7XXXXXXXXX)";
+        for (const name of FILE_FIELDS) {
+            if (!files[name]) next[name] = "يرجى إرفاق الملف";
+        }
+        if (!location) next.location = "يرجى تحديد موقع المشروع على الخريطة";
+        if (!priorPledge) next.priorPledge = "يرجى اختيار أحد الخيارات";
+        if (!education) next.education = "يرجى اختيار أحد الخيارات";
+        if (!legalPledge) next.legalPledge = "يجب الموافقة على التعهد القانوني";
+        return next;
+    }
+
+    const breakdown = $derived(
+        [
+            { label: "رسم الخدمة", amount: BASE_FEE },
+            { label: "لا يوجد تعهد سابق", amount: PRIOR_PLEDGE_OPTIONS.find((o) => o.value === priorPledge)?.fee ?? 0 },
+            { label: "شهادة اخرى", amount: EDUCATION_OPTIONS.find((o) => o.value === education)?.fee ?? 0 },
+            { label: "يوجد عمال", amount: hasWorkers ? (WORKERS_OPTION.fee ?? 0) : 0 },
+        ].filter((line) => line.amount > 0),
+    );
+
+    // ---- Submit ----------------------------------------------------------
+    let submitting = $state(false);
+    let confirmOpen = $state(false);
+    let shake = $state(false);
+    let result = $state<ApplicationResult | null>(null);
+
+    async function handleSubmit() {
+        errors = validate();
+        if (Object.keys(errors).length) {
+            haptic("error");
+            shake = false;
+            requestAnimationFrame(() => (shake = true));
+            await tick();
+            document.querySelector("[data-invalid='true']")?.scrollIntoView({ behavior: "smooth", block: "center" });
             return;
         }
-        await finalize();
+        confirmOpen = true;
     }
 
     async function finalize() {
-        if (!service || !form) return;
+        if (!service) return;
         submitting = true;
-        const payload = buildApplicationPayload(service.schema, form.values);
-        const response = await submitApplication(service.id, payload, Boolean(service.fee));
+        const payload: Record<string, string | number> = { ...values, priorPledge, education, total };
+        if (hasWorkers) payload.workers = WORKERS_OPTION.value;
+        if (location) {
+            payload.lat = location.lat;
+            payload.lng = location.lng;
+        }
+        const response = await submitApplication(service.id, payload, true);
         submitting = false;
+        confirmOpen = false;
         result = response.data;
-        step = "done";
+        window.scrollTo({ top: 0 });
     }
 
-    function confirmPayment() {
-        showAlert({
-            variant: "info",
-            title: "تأكيد الدفع (تجريبي)",
-            message: service?.fee
-                ? `سيتم خصم ${formatCurrencyIQD(service.fee.amount)} ضمن النسخة التجريبية دون أي دفع حقيقي.`
-                : "",
-            confirmLabel: "تأكيد الدفع",
-            cancelLabel: "إلغاء",
-            onConfirm: finalize,
-        });
-    }
+    const money = (n: number) => `${n.toLocaleString("en-US")} د.ع`;
 </script>
 
+{#snippet label(text: string, forId?: string)}
+    <label for={forId} class="block mb-2 text-label text-on-surface">
+        {text}
+        <span class="text-danger" aria-hidden="true">*</span>
+    </label>
+{/snippet}
+
+{#snippet fieldError(name: string)}
+    {#if errors[name]}
+        <p class="mt-2 flex items-center gap-1 text-caption font-bold text-danger" in:rise={{ y: -4 }}>
+            <AppIcon name="warning-circle" size={14} weight="fill" />
+            {errors[name]}
+        </p>
+    {/if}
+{/snippet}
+
 {#if query.isLoading}
-    <PageLoading />
+    <div class="px-gutter pt-5 flex flex-col gap-4">
+        <div class="flex flex-col items-center gap-4 py-4">
+            <Skeleton shape="arch" class="w-24 h-[120px]" />
+            <Skeleton class="h-7 w-3/4" />
+            <Skeleton class="h-4 w-full" />
+        </div>
+        <Skeleton class="h-[420px] rounded-frame" />
+    </div>
 {:else if !service}
     <EmptyState
+        icon="file-text"
         title="الخدمة غير موجودة"
         description="تعذّر العثور على هذه الخدمة."
         actionLabel="العودة إلى الخدمات"
-        onAction={() => push("/services")}
+        onAction={() => goReplace("/services")}
     />
-{:else if step === "done"}
-    <div class="px-6 py-14 flex flex-col items-center text-center animate-fade-up">
-        <span class="grid place-items-center w-20 h-20 rounded-full bg-success-container text-success">
-            <AppIcon name="check-circle" size={44} weight="fill" />
-        </span>
-        <h1 class="mt-5 text-xl font-extrabold text-on-surface">تم تقديم طلبك بنجاح</h1>
-        <p class="mt-2 text-sm leading-relaxed text-on-surface-variant max-w-xs">
-            يمكنك متابعة مراحل معاملتك من قسم «طلباتي».
+{:else if result}
+    <!-- Success moment -->
+    <div class="px-gutter py-12 flex flex-col items-center text-center">
+        <SuccessMark size={96} />
+        <h1 class="mt-7 text-title-1 text-on-surface" in:rise={{ delay: stagger(4) }}>تم تقديم طلبك</h1>
+        <p class="mt-2 max-w-xs text-body text-on-surface-variant" in:rise={{ delay: stagger(5) }}>
+            وصل طلب «{service.title}». ستصلك إشعارات مع كل مرحلة.
         </p>
-        {#if result}
-            <div class="mt-4 rounded-field bg-surface-container-high px-5 py-3">
-                <span class="text-[11px] text-on-surface-muted">الرقم المرجعي</span>
-                <p class="font-mono text-base font-bold text-primary tracking-tight">{result.reference}</p>
-            </div>
-        {/if}
-        <div class="mt-7 flex flex-col gap-2.5 w-full max-w-xs">
-            <button
-                type="button"
-                onclick={() => push("/requests")}
-                class="w-full rounded-field bg-primary py-3.5 text-sm font-bold text-on-primary active:bg-primary-hover transition"
+        <div class="mt-6 w-full rounded-frame bg-surface-container p-4 shadow-e1" in:rise={{ delay: stagger(6) }}>
+            <p class="text-caption text-on-surface-muted">الرقم المرجعي</p>
+            <p class="mt-1 text-title-2 text-primary tracking-wide" dir="ltr">{result.reference}</p>
+        </div>
+        <div class="mt-8 w-full flex flex-col gap-2" in:rise={{ delay: stagger(7) }}>
+            <Button class="rounded-frame" size="lg" block onclick={() => go("/requests")}>متابعة طلباتي</Button>
+            <Button class="rounded-frame" variant="ghost" block onclick={() => goReplace("/services")}
+                >العودة إلى الخدمات</Button
             >
-                متابعة طلباتي
-            </button>
-            <button
-                type="button"
-                onclick={() => replace("/services")}
-                class="w-full rounded-field bg-surface-container-high py-3.5 text-sm font-bold text-on-surface transition"
-            >
-                العودة إلى الخدمات
-            </button>
         </div>
     </div>
-{:else if step === "payment" && service.fee}
-    <div class="px-4 py-6 animate-fade-up">
-        <div class="rounded-card bg-surface-container border border-outline-variant p-5 shadow-card text-center">
-            <span class="mx-auto grid place-items-center w-16 h-16 rounded-full bg-payment-container text-payment">
-                <AppIcon name="wallet" size={34} weight="fill" />
-            </span>
-            <h1 class="mt-4 text-lg font-extrabold text-on-surface">إتمام الدفع</h1>
-            <p class="mt-1 text-sm text-on-surface-variant">{service.title}</p>
-            <div class="mt-5 flex items-center justify-between rounded-field bg-surface-container-high px-4 py-3.5">
-                <span class="text-sm font-bold text-on-surface">{service.fee.label}</span>
-                <span class="text-base font-extrabold text-payment">{formatCurrencyIQD(service.fee.amount)}</span>
+{:else}
+    <div class="px-gutter pt-4 pb-40">
+        <!-- Service summary card -->
+        <header
+            class="mb-4 overflow-hidden rounded-frame bg-surface-container shadow-e1 border-t-4 border-primary"
+            in:rise
+        >
+            <div class="flex items-start gap-4 p-4">
+                <IconFrame icon={service.icon} size="md" transitionName="service-icon-{service.id}" />
+                <div class="min-w-0 flex-1">
+                    <h1 class="text-title-2 text-on-surface">{service.title}</h1>
+                    <p class="mt-1.5 text-body text-on-surface-variant">{service.description}</p>
+                </div>
             </div>
-            <p class="mt-3 text-[11px] text-on-surface-muted leading-relaxed">
-                هذه عملية دفع تجريبية لأغراض العرض فقط ولا يتم خصم أي مبلغ فعلي.
-            </p>
-        </div>
-
-        <div class="mt-6 flex flex-col gap-2.5">
-            <button
-                type="button"
-                onclick={confirmPayment}
-                disabled={submitting}
-                class="w-full rounded-field bg-primary py-3.5 text-sm font-bold text-on-primary active:bg-primary-hover transition disabled:opacity-60"
-            >
-                {submitting ? "جارٍ المعالجة..." : "ادفع الآن"}
-            </button>
-            <button
-                type="button"
-                onclick={() => (step = "form")}
-                class="w-full rounded-field bg-surface-container-high py-3.5 text-sm font-bold text-on-surface transition"
-            >
-                رجوع
-            </button>
-        </div>
-    </div>
-{:else if form}
-    <div class="px-4 py-5 animate-fade-up">
-        <div class="rounded-card bg-primary-container/60 border border-primary-container px-4 py-3 mb-5">
-            <p class="text-[13px] font-bold text-on-surface">{service.title}</p>
-            <p class="mt-0.5 text-[11px] text-on-surface-variant">
-                أكمل الحقول التالية ثم وافق على الإقرارات لإتمام التقديم.
-            </p>
-        </div>
+            <div class="flex items-center gap-3 border-t border-outline-variant bg-surface-container-high/60 px-4 py-3">
+                {#if categoryTitle}
+                    <span class="flex min-w-0 flex-1 items-center gap-1.5 text-label text-on-surface">
+                        <AppIcon name="tag" size={18} weight="fill" class="shrink-0 text-primary" />
+                        <span class="truncate">{categoryTitle}</span>
+                    </span>
+                    <span class="h-6 w-px shrink-0 bg-outline" aria-hidden="true"></span>
+                {/if}
+                <span class="flex shrink-0 items-center gap-1.5 text-label text-on-surface">
+                    <AppIcon name="money" size={20} weight="fill" class="text-primary" />
+                    <span class="tabular-nums">{money(BASE_FEE)}</span>
+                </span>
+            </div>
+        </header>
 
         <form
+            novalidate
             onsubmit={(e) => {
                 e.preventDefault();
                 handleSubmit();
             }}
-            class="flex flex-col gap-6"
+            class="flex flex-col gap-4"
         >
-            {#each service.schema as section (section.title)}
-                <fieldset class="flex flex-col gap-4">
-                    <legend class="text-sm font-extrabold text-primary mb-1">{section.title}</legend>
-                    {#each section.fields as field (field.name)}
-                        <FormField
-                            {field}
-                            value={form.values[field.name] ?? ""}
-                            error={form.touched[field.name] ? form.errors[field.name] : undefined}
-                            onInput={(v) => form?.setValue(field.name, v)}
-                            onBlur={() => form?.blurField(field.name)}
-                        />
-                    {/each}
-                </fieldset>
-            {/each}
-
-            <fieldset class="flex flex-col gap-3 rounded-card bg-surface-container-high p-4">
-                <legend class="flex items-center gap-1.5 text-sm font-extrabold text-on-surface px-1">
-                    <AppIcon name="shield-check" size={17} weight="fill" class="text-primary" />
-                    الإقرارات والتعهدات
-                </legend>
-                {#each service.declarations as declaration, i (declaration)}
-                    <label class="flex items-start gap-2.5 cursor-pointer">
-                        <input
-                            type="checkbox"
-                            checked={accepted[i]}
-                            onchange={() => toggleDeclaration(i)}
-                            class="mt-0.5 w-5 h-5 shrink-0 accent-primary"
-                        />
-                        <span class="text-[13px] leading-relaxed text-on-surface-variant">{declaration}</span>
-                    </label>
-                {/each}
-                {#if declarationError}
-                    <p class="flex items-center gap-1 text-[11px] font-bold text-danger px-1">
-                        <AppIcon name="warning-circle" size={13} weight="fill" />
-                        يجب الموافقة على جميع الإقرارات للمتابعة.
-                    </p>
-                {/if}
-            </fieldset>
-
-            <button
-                type="submit"
-                disabled={submitting}
-                class="w-full rounded-field bg-primary py-3.5 text-sm font-bold text-on-primary active:bg-primary-hover transition disabled:opacity-60"
+            <!-- One form card, no sub-sections -->
+            <section
+                class="rounded-frame bg-surface-container p-5 shadow-e1 flex flex-col gap-5"
+                in:rise={{ delay: stagger(1) }}
             >
-                {#if service.fee}
-                    المتابعة إلى الدفع
-                {:else}
-                    تقديم الطلب
-                {/if}
-            </button>
+                <div data-invalid={!!errors.phone}>
+                    {@render label("رقم الهاتف", "phone")}
+                    <div class="flex gap-2">
+                        <input
+                            id="phone"
+                            type="tel"
+                            inputmode="numeric"
+                            autocomplete="tel"
+                            placeholder="ادخل رقم الهاتف"
+                            value={values.phone}
+                            oninput={(e) => setValue("phone", e.currentTarget.value)}
+                            class={fieldClass(!!errors.phone, "flex-1")}
+                        />
+                        <span
+                            class="grid place-items-center h-14 px-4 shrink-0 rounded-frame bg-surface-container-high text-label text-on-surface"
+                            dir="ltr">+964</span
+                        >
+                    </div>
+                    {@render fieldError("phone")}
+                </div>
+
+                <div data-invalid={!!errors.projectName}>
+                    {@render label("اسم المشروع", "projectName")}
+                    <input
+                        id="projectName"
+                        type="text"
+                        value={values.projectName}
+                        oninput={(e) => setValue("projectName", e.currentTarget.value)}
+                        class={fieldClass(!!errors.projectName)}
+                    />
+                    {@render fieldError("projectName")}
+                </div>
+
+                <div data-invalid={!!errors.specialty}>
+                    {@render label("الاختصاص", "specialty")}
+                    <SearchableSelect
+                        id="specialty"
+                        value={values.specialty}
+                        options={SPECIALTIES}
+                        invalid={!!errors.specialty}
+                        onChange={(v) => setValue("specialty", v)}
+                    />
+                    {@render fieldError("specialty")}
+                </div>
+
+                <div data-invalid={!!errors.ownerName}>
+                    {@render label("اسم صاحب المشروع الكامل", "ownerName")}
+                    <input
+                        id="ownerName"
+                        type="text"
+                        autocomplete="name"
+                        value={values.ownerName}
+                        oninput={(e) => setValue("ownerName", e.currentTarget.value)}
+                        class={fieldClass(!!errors.ownerName)}
+                    />
+                    {@render fieldError("ownerName")}
+                </div>
+
+                <div data-invalid={!!errors.birthDate}>
+                    {@render label("تاريخ الميلاد", "birthDate")}
+                    <div class="relative {fieldClass(!!errors.birthDate, 'flex items-center gap-3')}">
+                        <AppIcon name="calendar" size={18} class="shrink-0 text-on-surface-variant" />
+                        <span class="flex-1 {values.birthDate ? 'text-on-surface' : 'text-on-surface-muted'}">
+                            {values.birthDate
+                                ? new Date(values.birthDate).toLocaleDateString("ar-IQ", { dateStyle: "long" })
+                                : "يرجى اختيار التاريخ"}
+                        </span>
+                        <AppIcon name="caret-down" size={16} class="shrink-0 text-on-surface-muted" />
+                        <input
+                            id="birthDate"
+                            type="date"
+                            max={new Date().toISOString().slice(0, 10)}
+                            value={values.birthDate}
+                            onclick={(e) => e.currentTarget.showPicker?.()}
+                            onchange={(e) => setValue("birthDate", e.currentTarget.value)}
+                            class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        />
+                    </div>
+                    {@render fieldError("birthDate")}
+                </div>
+                <div data-invalid={!!errors.location}>
+                    {@render label("العنوان المفصل للمشروع")}
+                    <LocationPicker
+                        value={location}
+                        invalid={!!errors.location}
+                        onChange={(v) => {
+                            location = v;
+                            delete errors.location;
+                        }}
+                    />
+                    {@render fieldError("location")}
+                </div>
+
+                {#each [{ title: "عنوان المشروع", fields: PROJECT_ADDRESS }, { title: "عنوان صاحب المشروع", fields: OWNER_ADDRESS }] as group (group.title)}
+                    <fieldset class="contents">
+                        <legend class="sr-only">{group.title}</legend>
+                        {#each group.fields as field (field.name)}
+                            <div data-invalid={!!errors[field.name]}>
+                                {@render label(field.label, field.name)}
+                                <input
+                                    id={field.name}
+                                    type="text"
+                                    placeholder={field.placeholder}
+                                    value={values[field.name]}
+                                    oninput={(e) => setValue(field.name, e.currentTarget.value)}
+                                    class={fieldClass(!!errors[field.name])}
+                                />
+                                {@render fieldError(field.name)}
+                            </div>
+                        {/each}
+                    </fieldset>
+                {/each}
+                {#each ID_FILES as field (field.name)}
+                    <div data-invalid={!!errors[field.name]}>
+                        {@render label(field.label, field.name)}
+                        <FileUpload
+                            id={field.name}
+                            file={files[field.name]}
+                            error={errors[field.name]}
+                            onChange={(f) => setFile(field.name, f)}
+                        />
+                    </div>
+                {/each}
+                <div data-invalid={!!errors.priorPledge}>
+                    {@render label("هل يوجد تعهد قانوني سابق ؟")}
+                    <div class="flex flex-col gap-2.5" role="radiogroup">
+                        {#each PRIOR_PLEDGE_OPTIONS as option (option.value)}
+                            <ChoiceOption
+                                label={option.label}
+                                fee={option.fee}
+                                checked={priorPledge === option.value}
+                                invalid={!!errors.priorPledge}
+                                onToggle={() => {
+                                    priorPledge = priorPledge === option.value ? "" : option.value;
+                                    delete errors.priorPledge;
+                                }}
+                            />
+                        {/each}
+                    </div>
+                    {@render fieldError("priorPledge")}
+                </div>
+
+                <div data-invalid={!!errors.education}>
+                    {@render label("التحصيل الدراسي لصاحب المشروع")}
+                    <div class="flex flex-col gap-2.5" role="radiogroup">
+                        {#each EDUCATION_OPTIONS as option (option.value)}
+                            <ChoiceOption
+                                label={option.label}
+                                fee={option.fee}
+                                checked={education === option.value}
+                                invalid={!!errors.education}
+                                onToggle={() => {
+                                    education = education === option.value ? "" : option.value;
+                                    delete errors.education;
+                                }}
+                            />
+                        {/each}
+                    </div>
+                    {@render fieldError("education")}
+                </div>
+
+                <div data-invalid={!!errors.educationProof}>
+                    {@render label("صورة عن الشهادة او تأييد التحصيل الدراسي", "educationProof")}
+                    <FileUpload
+                        id="educationProof"
+                        file={files.educationProof}
+                        error={errors.educationProof}
+                        onChange={(f) => setFile("educationProof", f)}
+                    />
+                </div>
+
+                <div>
+                    {@render label("عدد العمال ان وجد")}
+                    <ChoiceOption
+                        label={WORKERS_OPTION.label}
+                        fee={WORKERS_OPTION.fee}
+                        checked={hasWorkers}
+                        onToggle={() => (hasWorkers = !hasWorkers)}
+                    />
+                </div>
+
+                <div data-invalid={!!errors.legalPledge}>
+                    {@render label("التعهد القانوني")}
+                    <ChoiceOption
+                        label={LEGAL_PLEDGE_TEXT}
+                        checked={legalPledge}
+                        invalid={!!errors.legalPledge}
+                        onToggle={() => {
+                            legalPledge = !legalPledge;
+                            delete errors.legalPledge;
+                        }}
+                    />
+                    {@render fieldError("legalPledge")}
+                </div>
+            </section>
+
+            <!-- Sticky action bar (thumb zone): live total + the one primary action -->
+            <SafeArea bottom class="fixed bottom-0 inset-x-0 z-30 flex justify-center pointer-events-none">
+                <div
+                    class="pointer-events-auto w-full max-w-[480px] flex items-center gap-4 rounded-t-frame bg-surface-container px-gutter pt-4 pb-4 shadow-e4"
+                >
+                    <div class="min-w-0">
+                        <p class="text-caption text-on-surface-muted">المبلغ</p>
+                        <p class="text-title-2 text-on-surface whitespace-nowrap">
+                            <CountUp value={total} />
+                            <span class="text-label">د.ع</span>
+                        </p>
+                    </div>
+                    <Button type="submit" size="lg" class="rounded-frame flex-1" {shake}>إرسال الطلب</Button>
+                </div>
+            </SafeArea>
         </form>
     </div>
-{:else}
-    <PageLoading />
+
+    <Sheet open={confirmOpen} title="تأكيد إرسال الطلب" onClose={() => (confirmOpen = false)}>
+        <p class="text-body text-on-surface-variant">{service.title}</p>
+        <ul class="mt-4 flex flex-col divide-y divide-outline-variant rounded-frame bg-surface-container-high px-4">
+            {#each breakdown as line (line.label)}
+                <li class="flex items-center justify-between py-3 text-body">
+                    <span class="text-on-surface-variant">{line.label}</span>
+                    <span class="text-on-surface tabular-nums">{money(line.amount)}</span>
+                </li>
+            {/each}
+            <li class="flex items-center justify-between py-3">
+                <span class="text-label text-on-surface">المجموع</span>
+                <span class="text-headline text-primary tabular-nums">{money(total)}</span>
+            </li>
+        </ul>
+        <p class="mt-3 text-caption text-on-surface-muted">نسخة تجريبية — لن يتم أي دفع حقيقي.</p>
+        <div class="mt-5 flex flex-col gap-2">
+            <Button class="rounded-frame" size="lg" block loading={submitting} onclick={finalize}>تأكيد وإرسال</Button>
+            <Button class="rounded-frame" variant="ghost" block onclick={() => (confirmOpen = false)}
+                >تعديل الطلب</Button
+            >
+        </div>
+    </Sheet>
 {/if}

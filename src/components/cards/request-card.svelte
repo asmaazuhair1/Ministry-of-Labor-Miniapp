@@ -1,49 +1,63 @@
 <script lang="ts">
     import AppIcon from "@/components/app-icon.svelte";
+    import IconFrame from "@/components/ui/icon-frame.svelte";
     import StatusBadge from "@/components/status-badge.svelte";
-    import ProgressIndicator from "@/components/requests/progress-indicator.svelte";
+    import { STATUS_DEFINITIONS, STATUS_TOKEN_DOT } from "@/config/status.config";
     import { formatArabicDate } from "@/utils/format.util";
     import type { RequestSummary } from "@/types/requests";
 
+    /** Request summary: arch icon, title, reference, status, segmented stage progress. */
     interface Props {
         request: RequestSummary;
         onClick: (id: string) => void;
     }
 
     const { request, onClick }: Props = $props();
+
+    const token = $derived(STATUS_DEFINITIONS[request.status].token);
+    const doneCount = $derived(request.stages.filter((s) => s.state === "done").length);
+    const currentIndex = $derived(request.stages.findIndex((s) => s.state === "current"));
+    const currentTitle = $derived(
+        currentIndex >= 0 ? request.stages[currentIndex].title : request.stages[request.stages.length - 1]?.title,
+    );
 </script>
 
 <button
     type="button"
     onclick={() => onClick(request.id)}
-    class="w-full text-start rounded-card bg-surface-container border border-outline-variant p-4 shadow-card active:scale-[0.99] transition"
+    class="pressable w-full text-start rounded-card bg-surface-container p-4 shadow-e1 active:shadow-none"
 >
-    <div class="flex items-start gap-3">
-        <span class="grid place-items-center w-11 h-11 shrink-0 rounded-2xl bg-primary-container">
-            <AppIcon name={request.serviceIcon} size={23} weight="fill" class="text-primary" />
-        </span>
+    <div class="flex items-start gap-3.5">
+        <IconFrame icon={request.serviceIcon} size="sm" transitionName="request-icon-{request.id}" />
         <div class="flex-1 min-w-0">
-            <p class="text-sm font-extrabold text-on-surface leading-snug line-clamp-2">{request.serviceTitle}</p>
-            <p class="mt-1 flex items-center gap-1.5 text-[11px] text-on-surface-muted">
-                <AppIcon name="scroll" size={13} />
-                <span class="font-mono tracking-tight">{request.reference}</span>
-            </p>
+            <div class="flex items-start justify-between gap-2">
+                <p class="text-headline text-on-surface line-clamp-2">{request.serviceTitle}</p>
+                <StatusBadge status={request.status} size="sm" />
+            </div>
+            <p class="mt-1 text-caption text-on-surface-muted" dir="ltr">{request.reference}</p>
         </div>
-        <StatusBadge status={request.status} size="sm" />
     </div>
 
-    <div class="mt-4">
-        <ProgressIndicator stages={request.stages} status={request.status} />
+    <!-- Segmented progress: one segment per stage -->
+    <div class="mt-4 flex gap-1" aria-hidden="true">
+        {#each request.stages as stage (stage.key)}
+            <span class="relative flex-1 h-1.5 overflow-hidden rounded-pill bg-surface-container-high">
+                {#if stage.state === "done"}
+                    <span class="absolute inset-0 {STATUS_TOKEN_DOT[token]}"></span>
+                {:else if stage.state === "current"}
+                    <span class="absolute inset-y-0 start-0 w-1/2 {STATUS_TOKEN_DOT[token]} opacity-60"></span>
+                {/if}
+            </span>
+        {/each}
     </div>
 
-    <div class="mt-3 pt-3 border-t border-outline-variant flex items-center justify-between">
-        <span class="flex items-center gap-1.5 text-[11px] text-on-surface-muted">
-            <AppIcon name="calendar" size={13} />
-            {formatArabicDate(request.submittedAt)}
+    <div class="mt-3 flex items-center justify-between gap-3 text-caption">
+        <span class="min-w-0 truncate text-on-surface-variant">
+            <span class="tabular-nums">{doneCount}/{request.stages.length}</span> · {currentTitle}
         </span>
-        <span class="flex items-center gap-1 text-[11px] font-bold text-primary">
-            التفاصيل
-            <AppIcon name="caret-left" size={13} weight="bold" />
+        <span class="shrink-0 inline-flex items-center gap-1 text-on-surface-muted">
+            {formatArabicDate(request.submittedAt)}
+            <AppIcon name="caret-left" size={14} />
         </span>
     </div>
 </button>

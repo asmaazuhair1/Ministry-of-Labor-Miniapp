@@ -1,39 +1,25 @@
 <script lang="ts">
+    import AppIcon from "@/components/app-icon.svelte";
+    import WeavePattern from "@/assets/patterns/weave-pattern.svelte";
+    import { pop } from "@/utils/motion";
+
+    /** Empty-state illustration: an arch window with woven threads and a floating icon. */
     interface Props {
+        icon?: string;
         size?: number;
     }
-    const { size = 132 }: Props = $props();
+    const { icon = "magnifying-glass", size = 132 }: Props = $props();
 </script>
 
-<svg
-    width={size}
-    height={size}
-    viewBox="0 0 160 160"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    role="img"
-    aria-hidden="true"
->
-    <circle cx="80" cy="80" r="70" class="fill-surface-container-high" />
-    <rect
-        x="48"
-        y="40"
-        width="64"
-        height="82"
-        rx="10"
-        class="fill-surface-container stroke-outline"
-        stroke-width="2.5"
-    />
-    <rect x="60" y="56" width="40" height="6" rx="3" class="fill-outline" />
-    <rect x="60" y="72" width="40" height="6" rx="3" class="fill-outline-variant" />
-    <rect x="60" y="88" width="26" height="6" rx="3" class="fill-outline-variant" />
-    <circle cx="104" cy="106" r="22" class="fill-primary-container stroke-primary" stroke-width="2.5" />
-    <path
-        d="M96 106 L102 112 L113 100"
-        class="stroke-primary"
-        stroke-width="3"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        fill="none"
-    />
-</svg>
+<span class="relative inline-grid place-items-center" style="width:{size}px;height:{size * 1.15}px" aria-hidden="true">
+    <span class="absolute inset-0 shape-arch bg-primary-container overflow-hidden">
+        <WeavePattern tile={18} class="absolute inset-0 w-full h-full text-primary/15" />
+    </span>
+    <span class="absolute inset-3 shape-arch border border-primary/25"></span>
+    <span
+        class="relative grid place-items-center w-14 h-14 rounded-full bg-surface-container text-primary shadow-e2"
+        in:pop={{ delay: 150 }}
+    >
+        <AppIcon name={icon} size={26} weight="bold" />
+    </span>
+</span>

@@ -3,10 +3,12 @@
     "configurations": [
         {
             "name": "mol",
-            "runtimeExecutable": "npm",
-            "runtimeArgs": ["run", "dev:mol"],
-            "port": 8080,
-            "autoPort": true
+            "runtimeExecutable": "/bin/zsh",
+            "runtimeArgs": [
+                "-c",
+                "export PATH=\"$HOME/.local/node-v22.23.4-darwin-arm64/bin:$PATH\" && \"$HOME/.local/node-v22.23.4-darwin-arm64/bin/npm\" run dev:mol -- --port 8086 --strictPort"
+            ],
+            "port": 8086
         }
     ]
 }

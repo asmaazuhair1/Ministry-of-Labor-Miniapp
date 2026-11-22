@@ -11,15 +11,14 @@
     const { status, size = "md" }: Props = $props();
 
     const def = $derived(STATUS_DEFINITIONS[status]);
-    const padding = $derived(size === "sm" ? "px-2.5 py-1 text-[11px]" : "px-3 py-1.5 text-xs");
-    const iconSize = $derived(size === "sm" ? 13 : 15);
+    const padding = $derived(size === "sm" ? "h-7 px-2.5" : "h-8 px-3");
 </script>
 
 <span
-    class="inline-flex items-center gap-1.5 rounded-full font-bold {padding} {STATUS_TOKEN_BG[
+    class="inline-flex items-center gap-1.5 shrink-0 rounded-pill text-caption font-bold whitespace-nowrap {padding} {STATUS_TOKEN_BG[
         def.token
     ]} {STATUS_TOKEN_TEXT[def.token]}"
 >
-    <AppIcon name={def.icon} size={iconSize} weight="fill" />
+    <AppIcon name={def.icon} size={14} weight="fill" />
     {def.label}
 </span>

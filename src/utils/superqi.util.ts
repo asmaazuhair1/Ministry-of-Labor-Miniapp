@@ -34,3 +34,21 @@ export function closeMiniApp(fallback: () => void): void {
     }
     fallback();
 }
+
+export type HapticKind = "light" | "success" | "error";
+
+/**
+ * Haptic feedback on key actions via the host bridge. No-op in the browser or
+ * when the host lacks the API — never throws.
+ */
+export function haptic(kind: HapticKind = "light"): void {
+    if (typeof my === "undefined") return;
+    const fn = kind === "light" ? my.vibrateShort : (my.vibrateLong ?? my.vibrateShort);
+    if (typeof fn === "function") {
+        try {
+            (fn as () => void).call(my);
+        } catch {
+            // Host refused; feedback is optional.
+        }
+    }
+}

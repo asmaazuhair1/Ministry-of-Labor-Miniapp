@@ -2,7 +2,6 @@ import type { Component } from "svelte";
 import HomePage from "@/pages/home/index.svelte";
 import ServicesPage from "@/pages/services/index.svelte";
 import CategoryDetailsPage from "@/pages/services/category.svelte";
-import ServiceDetailsPage from "@/pages/services/details.svelte";
 import ServiceApplyPage from "@/pages/services/apply.svelte";
 import RequestsPage from "@/pages/requests/index.svelte";
 import RequestDetailsPage from "@/pages/requests/details.svelte";
@@ -11,6 +10,9 @@ import EditProfilePage from "@/pages/account/edit.svelte";
 import NotificationsPage from "@/pages/notifications/index.svelte";
 import NewsListPage from "@/pages/news/index.svelte";
 import NewsDetailsPage from "@/pages/home/news.svelte";
+import AnnouncementDetailsPage from "@/pages/home/announcement.svelte";
+import LawsPage from "@/pages/laws/index.svelte";
+import PrimitivesShowcase from "@/pages/dev/primitives.svelte";
 import NotFoundPage from "@/pages/not-found/index.svelte";
 
 export interface LayoutConfig {
@@ -72,18 +74,6 @@ export const routes: RouteConfig[] = [
     },
     {
         path: "/services/:serviceId",
-        component: ServiceDetailsPage,
-        layout: {
-            showLayout: true,
-            showBottomNav: false,
-            showBackButton: true,
-            showLogo: false,
-            showBell: false,
-            pageTitle: "تفاصيل الخدمة",
-        },
-    },
-    {
-        path: "/services/:serviceId/apply",
         component: ServiceApplyPage,
         layout: {
             showLayout: true,
@@ -178,6 +168,47 @@ export const routes: RouteConfig[] = [
             pageTitle: "الخبر",
         },
     },
+    {
+        path: "/announcements/:announcementId",
+        component: AnnouncementDetailsPage,
+        layout: {
+            showLayout: true,
+            showBottomNav: false,
+            showBackButton: true,
+            showLogo: false,
+            showBell: false,
+            pageTitle: "الإعلان",
+        },
+    },
+    {
+        path: "/laws",
+        component: LawsPage,
+        layout: {
+            showLayout: true,
+            showBottomNav: false,
+            showBackButton: true,
+            showLogo: false,
+            showBell: false,
+            pageTitle: "القوانين والتعليمات",
+        },
+    },
+    // Dev-only design-system showcase (stripped from production builds).
+    ...(import.meta.env.DEV
+        ? [
+              {
+                  path: "/dev/primitives",
+                  component: PrimitivesShowcase,
+                  layout: {
+                      showLayout: true,
+                      showBottomNav: false,
+                      showBackButton: true,
+                      showLogo: false,
+                      showBell: false,
+                      pageTitle: "Naseej",
+                  },
+              },
+          ]
+        : []),
     {
         path: "*",
         component: NotFoundPage,

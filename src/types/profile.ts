@@ -16,6 +16,7 @@ export interface UserProfile {
     fullName: string;
     firstName: string;
     nationalId: string;
+    phone: string;
     avatarColor: AccentKey;
     verified: boolean;
     beneficiaryStatus: string;

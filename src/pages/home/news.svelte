@@ -1,12 +1,12 @@
 <script lang="ts">
-    import { push } from "svelte-spa-router";
-    import AppIcon from "@/components/app-icon.svelte";
     import EmptyState from "@/components/empty-state.svelte";
-    import PageLoading from "@/components/loading/page-loading.svelte";
-    import { ACCENT_SOFT, ACCENT_TEXT } from "@/utils/accent.util";
-    import { formatArabicDate } from "@/utils/format.util";
+    import Skeleton from "@/components/loading/skeleton.svelte";
+    import EditorialArticle from "@/components/editorial/editorial-article.svelte";
+    import AppIcon from "@/components/app-icon.svelte";
     import { createQuery } from "@/hooks/create-query.svelte";
-    import { getNewsById } from "./service";
+    import { formatArabicDate, readingLabel } from "@/utils/format.util";
+    import { go, goReplace } from "@/utils/navigation";
+    import { getNews, getNewsById } from "./service";
     import type { NewsItem } from "@/types/content";
 
     interface Props {
@@ -18,23 +18,72 @@
         key: "news-details",
         fetcher: () => getNewsById(params?.newsId ?? ""),
     });
+    const allQuery = createQuery<NewsItem[]>({ key: "news-related", fetcher: getNews });
     const news = $derived(query.data ?? null);
+    const more = $derived((allQuery.data ?? []).filter((n) => n.id !== news?.id).slice(0, 3));
 </script>
 
 {#if query.isLoading}
-    <PageLoading />
+    <Skeleton class="h-72 rounded-none" />
+    <div class="px-gutter pt-6 flex flex-col gap-3">
+        <Skeleton class="h-7 w-11/12" />
+        <Skeleton class="h-7 w-2/3" />
+        <Skeleton class="h-4 w-1/2" />
+        <Skeleton class="mt-4 h-4 w-full" />
+        <Skeleton class="h-4 w-full" />
+        <Skeleton class="h-4 w-4/5" />
+    </div>
 {:else if !news}
-    <EmptyState title="الخبر غير موجود" actionLabel="العودة للرئيسية" onAction={() => push("/")} />
+    <EmptyState
+        icon="newspaper"
+        title="الخبر غير موجود"
+        description="ربما حُذف هذا الخبر أو تغيّر رابطه."
+        actionLabel="كل الأخبار"
+        onAction={() => goReplace("/news")}
+    />
 {:else}
-    <article class="px-4 py-5 animate-fade-up">
-        <span class="grid place-items-center w-16 h-16 rounded-2xl {ACCENT_SOFT[news.accent]}">
-            <AppIcon name={news.icon} size={34} weight="fill" class={ACCENT_TEXT[news.accent]} />
-        </span>
-        <h1 class="mt-4 text-xl font-extrabold text-on-surface leading-snug">{news.title}</h1>
-        <p class="mt-1.5 flex items-center gap-1.5 text-[11px] text-on-surface-muted">
-            <AppIcon name="calendar" size={13} />
-            {formatArabicDate(news.date)}
-        </p>
-        <p class="mt-4 text-[15px] leading-loose text-on-surface-variant">{news.body}</p>
-    </article>
+    <EditorialArticle
+        id={news.id}
+        kind="news"
+        title={news.title}
+        date={news.date}
+        lead={news.excerpt}
+        body={news.body}
+        image={news.image}
+        icon={news.icon}
+        kicker="أخبار الوزارة"
+    >
+        {#if more.length}
+            <section>
+                <h2 class="mb-3 text-title-2 text-on-surface">اقرأ أيضاً</h2>
+                <ul class="flex flex-col gap-3">
+                    {#each more as item (item.id)}
+                        <li>
+                            <button
+                                type="button"
+                                onclick={() => go(`/news/${item.id}`)}
+                                class="pressable w-full flex items-center gap-3 rounded-card bg-surface-container p-2.5 text-start shadow-e1"
+                            >
+                                {#if item.image}
+                                    <img
+                                        src={item.image}
+                                        alt=""
+                                        loading="lazy"
+                                        class="w-24 h-20 shrink-0 rounded-field object-cover"
+                                    />
+                                {/if}
+                                <span class="flex-1 min-w-0">
+                                    <span class="text-label text-on-surface line-clamp-2">{item.title}</span>
+                                    <span class="mt-1 block text-caption text-on-surface-muted"
+                                        >{formatArabicDate(item.date)} · {readingLabel(item.body)}</span
+                                    >
+                                </span>
+                                <AppIcon name="caret-left" size={16} class="shrink-0 text-on-surface-muted" />
+                            </button>
+                        </li>
+                    {/each}
+                </ul>
+            </section>
+        {/if}
+    </EditorialArticle>
 {/if}

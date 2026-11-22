@@ -7,6 +7,8 @@ export interface ServiceCategory {
     title: string;
     description: string;
     icon: string;
+    /** Optional emblem image (public path); falls back to `icon` when absent. */
+    logo?: string;
     accent: AccentKey;
 }
 

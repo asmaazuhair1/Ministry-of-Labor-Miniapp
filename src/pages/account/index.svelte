@@ -1,8 +1,13 @@
 <script lang="ts">
     import AppIcon from "@/components/app-icon.svelte";
-    import PageLoading from "@/components/loading/page-loading.svelte";
+    import Skeleton from "@/components/loading/skeleton.svelte";
+    import SectionHeader from "@/components/section-header.svelte";
+    import Card from "@/components/ui/card.svelte";
+    import Tabs from "@/components/ui/tabs.svelte";
+    import LatticePattern from "@/assets/patterns/lattice-pattern.svelte";
     import { createQuery } from "@/hooks/create-query.svelte";
     import { showAlert } from "@/store/alert-state";
+    import { pop, rise, stagger } from "@/utils/motion";
     import { getProfile } from "./service";
     import type { UserProfile } from "@/types/profile";
 
@@ -15,16 +20,16 @@
                   .split(" ")
                   .slice(0, 2)
                   .map((p) => p[0])
-                  .join("")
+                  .join(" ")
             : "",
     );
 
     let language = $state<"ar" | "ku">("ar");
 
-    const settings: { label: string; subtitle: string; icon: string }[] = [
-        { label: "مركز المساعدة", subtitle: "إجابات سريعة", icon: "life-buoy" },
-        { label: "سياسة الخصوصية", subtitle: "حماية بياناتك", icon: "lock" },
-        { label: "الشروط والأحكام", subtitle: "شروط الاستخدام", icon: "file-text" },
+    const SUPPORT: { label: string; icon: string }[] = [
+        { label: "مركز المساعدة", icon: "life-buoy" },
+        { label: "سياسة الخصوصية", icon: "lock" },
+        { label: "الشروط والأحكام", icon: "file-text" },
     ];
 
     function notYet(label: string) {
@@ -33,104 +38,80 @@
 </script>
 
 {#if query.isLoading}
-    <PageLoading />
+    <div class="px-gutter pt-5 flex flex-col gap-4">
+        <Skeleton class="h-[236px] rounded-hero" />
+        <Skeleton class="h-[132px] rounded-card" />
+    </div>
 {:else if profile}
-    <div class="py-5 animate-fade-up flex flex-col gap-5">
-        <section class="px-4">
-            <div class="rounded-card bg-primary text-on-primary p-5 shadow-soft">
-                <div class="flex items-center gap-4">
+    <div class="px-gutter pt-5 pb-6 flex flex-col gap-section">
+        <!-- Moment: digital ID card -->
+        <section in:rise>
+            <Card tone="primary" radius="hero" padding="lg" elevation="e2">
+                <LatticePattern class="absolute inset-0 w-full h-full text-on-primary/[0.07]" />
+                <div class="relative flex items-center gap-4">
                     <span
-                        class="grid place-items-center w-16 h-16 shrink-0 rounded-full bg-white/20 text-xl font-extrabold"
+                        class="relative grid place-items-center w-[72px] h-[92px] shrink-0 shape-arch bg-on-primary/15"
                     >
-                        {initials}
+                        <span class="absolute inset-1.5 shape-arch border border-on-primary/30"></span>
+                        <span class="relative mt-2 text-title-2 text-on-primary">{initials}</span>
+                        {#if profile.verified}
+                            <span
+                                class="absolute -bottom-1 -start-1 grid place-items-center w-7 h-7 rounded-full bg-secondary text-on-secondary ring-4 ring-primary"
+                                in:pop={{ delay: 300 }}
+                                aria-label="هوية موثّقة"
+                            >
+                                <AppIcon name="seal-check" size={16} weight="fill" />
+                            </span>
+                        {/if}
                     </span>
                     <div class="min-w-0">
-                        <h1 class="text-lg font-extrabold truncate">{profile.fullName}</h1>
-                        <p class="mt-0.5 flex items-center gap-1.5 text-[12px] text-on-primary/85">
-                            <AppIcon name="identification-card" size={14} />
-                            <span class="font-mono tracking-tight">{profile.nationalId}</span>
+                        <h1 class="text-title-2 text-on-primary">{profile.fullName}</h1>
+                        <p class="mt-1 text-label font-normal text-on-primary/85 tracking-wide tabular-nums">
+                            <span dir="ltr">{profile.phone}</span>
                         </p>
                     </div>
                 </div>
-                {#if profile.verified}
-                    <div class="mt-4 flex items-center gap-1.5 rounded-full bg-white/15 w-fit px-3 py-1.5">
-                        <AppIcon name="seal-check" size={15} weight="fill" />
-                        <span class="text-[11px] font-bold">هوية رقمية موثّقة</span>
-                    </div>
-                {/if}
-            </div>
+            </Card>
         </section>
 
-        <section class="px-4 flex flex-col gap-4">
-            <!-- Language picker -->
-            <div class="rounded-card bg-surface-container border border-outline-variant shadow-card p-4">
-                <div class="flex items-center gap-3">
-                    <span class="grid place-items-center w-10 h-10 shrink-0 rounded-xl bg-surface-container-highest">
-                        <AppIcon name="translate" size={20} class="text-on-surface-variant" />
-                    </span>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-[13px] font-bold text-on-surface">اللغة</p>
-                        <p class="text-[11px] text-on-surface-muted">{language === "ar" ? "العربية" : "الكوردية"}</p>
+        <!-- Preferences -->
+        <section in:rise={{ delay: stagger(1) }}>
+            <SectionHeader title="الإعدادات" />
+            <div class="rounded-card bg-surface-container shadow-e1 divide-y divide-outline-variant">
+                <div class="flex items-center justify-between gap-3 ps-4 pe-3 py-2.5">
+                    <p class="flex items-center gap-2 text-label text-on-surface whitespace-nowrap">
+                        <AppIcon name="translate" size={18} class="text-on-surface-variant" /> لغة التطبيق
+                    </p>
+                    <div class="shrink-0">
+                        <Tabs
+                            items={[
+                                { id: "ar", label: "العربية" },
+                                { id: "ku", label: "کوردی" },
+                            ]}
+                            value={language}
+                            onChange={(id) => (language = id as "ar" | "ku")}
+                            label="لغة التطبيق"
+                            bleed={false}
+                        />
                     </div>
                 </div>
-                <div class="mt-3 grid grid-cols-2 gap-1 rounded-field bg-surface-container-high p-1">
-                    <button
-                        type="button"
-                        onclick={() => (language = "ar")}
-                        class="rounded-[0.6rem] py-2 text-[12px] font-bold transition {language === 'ar'
-                            ? 'bg-surface-container text-primary shadow-card'
-                            : 'text-on-surface-variant'}"
-                    >
-                        عربي
-                    </button>
-                    <button
-                        type="button"
-                        onclick={() => (language = "ku")}
-                        class="rounded-[0.6rem] py-2 text-[12px] font-bold transition {language === 'ku'
-                            ? 'bg-surface-container text-primary shadow-card'
-                            : 'text-on-surface-variant'}"
-                    >
-                        کوردی
-                    </button>
-                </div>
-            </div>
-
-            <!-- Help / Privacy / Terms -->
-            <div
-                class="rounded-card bg-surface-container border border-outline-variant divide-y divide-outline-variant shadow-card overflow-hidden"
-            >
-                {#each settings as item (item.label)}
+                {#each SUPPORT as item (item.label)}
                     <button
                         type="button"
                         onclick={() => notYet(item.label)}
-                        class="w-full flex items-center gap-3 px-4 py-3 text-start active:bg-surface-container-high transition"
+                        class="w-full flex items-center gap-3 px-4 min-h-14 text-start transition-colors duration-[var(--duration-fast)] active:bg-surface-container-high"
                     >
-                        <span
-                            class="grid place-items-center w-10 h-10 shrink-0 rounded-xl bg-surface-container-highest"
-                        >
-                            <AppIcon name={item.icon} size={19} class="text-on-surface-variant" />
-                        </span>
-                        <div class="flex-1 min-w-0">
-                            <p class="text-[13px] font-bold text-on-surface">{item.label}</p>
-                            <p class="text-[11px] text-on-surface-muted truncate">{item.subtitle}</p>
-                        </div>
-                        <AppIcon name="caret-left" size={16} class="text-on-surface-muted shrink-0" />
+                        <AppIcon name={item.icon} size={18} class="shrink-0 text-on-surface-variant" />
+                        <span class="flex-1 text-label text-on-surface">{item.label}</span>
+                        <AppIcon name="caret-left" size={16} class="shrink-0 text-on-surface-muted" />
                     </button>
                 {/each}
             </div>
-
-            <!-- About -->
-            <div
-                class="rounded-card bg-surface-container border border-outline-variant shadow-card px-4 py-3 flex items-center gap-3"
-            >
-                <span class="grid place-items-center w-10 h-10 shrink-0 rounded-xl bg-surface-container-highest">
-                    <AppIcon name="info" size={19} class="text-on-surface-variant" />
-                </span>
-                <div class="flex-1 min-w-0">
-                    <p class="text-[13px] font-bold text-on-surface">حول التطبيق</p>
-                    <p class="text-[11px] text-on-surface-muted">الإصدار 1.0.0</p>
-                </div>
-            </div>
         </section>
+
+        <footer class="flex flex-col items-center gap-2 pt-2 text-center" in:rise={{ delay: stagger(2) }}>
+            <img src="/logo.png" alt="" class="w-10 h-10 object-contain opacity-80" />
+            <p class="text-caption text-on-surface-muted">وزارة العمل والشؤون الاجتماعية · الإصدار 1.0.0</p>
+        </footer>
     </div>
 {/if}
