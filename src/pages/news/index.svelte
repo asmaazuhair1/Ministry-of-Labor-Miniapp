@@ -6,13 +6,7 @@
     import IconFrame from "@/components/ui/icon-frame.svelte";
     import LatticePattern from "@/assets/patterns/lattice-pattern.svelte";
     import { createQuery } from "@/hooks/create-query.svelte";
-    import {
-        arabicCountNoun,
-        formatArabicDate,
-        formatArabicDay,
-        formatArabicMonth,
-        readingLabel,
-    } from "@/utils/format.util";
+    import { formatArabicDay, formatArabicMonth, readingLabel } from "@/utils/format.util";
     import { reducedMotion, rise, stagger } from "@/utils/motion";
     import { go } from "@/utils/navigation";
     import { getNews } from "./service";
@@ -29,17 +23,11 @@
     const news = $derived(
         (newsQuery.data ?? []).slice().sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
     );
-    const NEWS_FORMS: [string, string, string, string] = [
-        "خبر من الوزارة",
-        "خبران من الوزارة",
-        "أخبار من الوزارة",
-        "خبراً من الوزارة",
-    ];
 </script>
 
 <div class="px-gutter pt-5 pb-8">
     {#if newsQuery.isLoading}
-        <Skeleton class="-mx-gutter -mt-5 h-[92px] rounded-none rounded-b-card" />
+        <Skeleton class="-mx-gutter -mt-5 h-[88px] rounded-none rounded-b-card" />
         <div class="mt-5 flex flex-col gap-5">
             {#each Array(3) as _, i (i)}
                 <Skeleton class="h-[330px] rounded-hero" />
@@ -53,9 +41,9 @@
         />
     {:else}
         <PageBanner
-            count={news.length}
-            title={arabicCountNoun(news.length, NEWS_FORMS)}
-            summary="آخر تحديث {formatArabicDate(news[0].date)}"
+            title="أخبار"
+            accent="الوزارة"
+            description="آخر أخبار وزارة العمل والشؤون الاجتماعية ومبادراتها وفعالياتها."
         />
 
         <ul class="mt-5 flex flex-col gap-5">

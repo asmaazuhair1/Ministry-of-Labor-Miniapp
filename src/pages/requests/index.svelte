@@ -8,7 +8,6 @@
     import { createQuery } from "@/hooks/create-query.svelte";
     import { duration, easing, fadeIn, reducedMotion, rise, stagger } from "@/utils/motion";
     import { go } from "@/utils/navigation";
-    import { arabicCountNoun } from "@/utils/format.util";
     import { getRequests } from "./service";
     import type { RequestStatus, RequestSummary } from "@/types/requests";
 
@@ -42,23 +41,13 @@
             .sort((a, b) => Number(NEEDS_YOU.includes(b.status)) - Number(NEEDS_YOU.includes(a.status))),
     );
 
-    const openCount = $derived(requests.filter((r) => inGroup(r, "open")).length);
-    const completedCount = $derived(requests.filter((r) => inGroup(r, "completed")).length);
-    const rejectedCount = $derived(requests.filter((r) => inGroup(r, "rejected")).length);
-    const OPEN_FORMS: [string, string, string, string] = [
-        "طلب قيد المتابعة",
-        "طلبان قيد المتابعة",
-        "طلبات قيد المتابعة",
-        "طلباً قيد المتابعة",
-    ];
-
     const flipOptions = () => ({ duration: reducedMotion() ? 0 : duration("base"), easing: easing("standard") });
     const open = (id: string) => go(`/requests/${id}`);
 </script>
 
 <div class="px-gutter pt-5 pb-6">
     {#if query.isLoading}
-        <Skeleton class="-mx-gutter -mt-5 h-[92px] rounded-none rounded-b-card" />
+        <Skeleton class="-mx-gutter -mt-5 h-[108px] rounded-none rounded-b-card" />
         <Skeleton shape="pill" class="mt-5 h-[52px] w-full" />
         <div class="mt-5 flex flex-col gap-3">
             {#each Array(3) as _, i (i)}
@@ -75,9 +64,9 @@
         />
     {:else}
         <PageBanner
-            count={openCount}
-            title={arabicCountNoun(openCount, OPEN_FORMS)}
-            summary="{completedCount} مكتملة · {rejectedCount} مرفوضة · {requests.length} إجمالي"
+            title="متابعة"
+            accent="الطلبات"
+            description="تابع حالة معاملاتك ومراحل إنجازها أولاً بأول، واطّلع على ما يحتاج إجراءً منك."
         />
 
         <div class="mt-5" in:rise={{ delay: stagger(1) }}>

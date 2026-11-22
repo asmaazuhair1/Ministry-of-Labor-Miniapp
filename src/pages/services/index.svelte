@@ -9,7 +9,6 @@
     import { createQuery } from "@/hooks/create-query.svelte";
     import { duration, easing, fadeIn, reducedMotion, rise, stagger } from "@/utils/motion";
     import { go } from "@/utils/navigation";
-    import { arabicCountNoun } from "@/utils/format.util";
     import { getCategories, getServices } from "./service";
     import type { ServiceCategory, ServiceSummary } from "@/types/services";
 
@@ -39,27 +38,15 @@
         const q = search.trim();
         return q ? inCategory.filter((s) => s.title.includes(q) || s.description.includes(q)) : inCategory;
     });
-    const availableCount = $derived(inCategory.filter((s) => s.availability === "available").length);
-    const pausedCount = $derived(inCategory.length - availableCount);
-    const scopeLabel = $derived(
-        activeCategory === "all"
-            ? "في جميع التصنيفات"
-            : `ضمن ${categories.find((c) => c.id === activeCategory)?.title ?? ""}`,
-    );
-
-    const SERVICE_FORMS: [string, string, string, string] = ["خدمة متاحة", "خدمات متاحة", "خدمات متاحة", "خدمة متاحة"];
-
     const categoryTitle = (id: string) => categories.find((c) => c.id === id)?.title;
     const flipOptions = () => ({ duration: reducedMotion() ? 0 : duration("base"), easing: easing("standard") });
 </script>
 
 <div class="px-gutter pt-5 pb-6">
     <PageBanner
-        count={availableCount}
-        loading={isLoading}
-        title="{arabicCountNoun(availableCount, SERVICE_FORMS)} الآن"
-        summary="{availableCount} متاحة · {pausedCount} متوقفة"
-        label="{availableCount} من {inCategory.length} خدمات متاحة {scopeLabel}"
+        title="الخدمات"
+        accent="الإلكترونية"
+        description="مجموعة متكاملة من خدمات وزارة العمل والشؤون الاجتماعية، قدّم عليها إلكترونياً وتابعها خطوة بخطوة."
     />
 
     <div class="mt-5" in:rise={{ delay: stagger(1) }}>

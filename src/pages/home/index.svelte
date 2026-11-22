@@ -5,7 +5,7 @@
     import Skeleton from "@/components/loading/skeleton.svelte";
     import Greeting from "./components/greeting.svelte";
     import StorySlider from "./components/story-slider.svelte";
-    import ServicesBento from "./components/services-bento.svelte";
+    import ServiceRow from "@/components/cards/service-row.svelte";
     import NewsCarousel from "./components/news-carousel.svelte";
     import LawsList from "@/components/cards/laws-list.svelte";
     import { createQuery } from "@/hooks/create-query.svelte";
@@ -61,17 +61,27 @@
         {/if}
     </section>
 
-    <!-- Services bento -->
+    <!-- Services (same card as the services page) -->
     <section in:rise={{ delay: stagger(2) }}>
         <SectionHeader title="الخدمات" actionLabel="الكل" onAction={() => go("/services")} />
         {#if servicesQuery.isLoading}
             <div class="flex flex-col gap-3">
                 {#each Array(3) as _, i (i)}
-                    <Skeleton class="h-[168px] rounded-card" />
+                    <Skeleton class="h-[112px] rounded-card" />
                 {/each}
             </div>
         {:else}
-            <ServicesBento services={servicesQuery.data ?? []} categories={categoriesQuery.data ?? []} />
+            <ul class="flex flex-col gap-3">
+                {#each servicesQuery.data ?? [] as service, i (service.id)}
+                    <li in:rise|global={{ delay: stagger(i) }}>
+                        <ServiceRow
+                            {service}
+                            categoryTitle={(categoriesQuery.data ?? []).find((c) => c.id === service.categoryId)?.title}
+                            onClick={(id) => go(`/services/${id}`)}
+                        />
+                    </li>
+                {/each}
+            </ul>
         {/if}
     </section>
 
