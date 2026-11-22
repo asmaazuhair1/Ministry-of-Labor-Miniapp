@@ -5,7 +5,6 @@
     import LatticePattern from "@/assets/patterns/lattice-pattern.svelte";
     import { formatArabicDate, formatArabicDay, formatArabicMonth, readingLabel } from "@/utils/format.util";
     import { pop, reducedMotion, rise, stagger } from "@/utils/motion";
-    import { haptic } from "@/utils/superqi.util";
 
     /*
      * Editorial "magazine page" shared by news and announcement details:
@@ -48,23 +47,6 @@
             ticking = false;
         });
     }
-
-    let copied = $state(false);
-    async function share() {
-        const url = window.location.href;
-        try {
-            if (navigator.share) {
-                await navigator.share({ title, url });
-            } else {
-                await navigator.clipboard?.writeText(url);
-                copied = true;
-                setTimeout(() => (copied = false), 1600);
-            }
-            haptic("light");
-        } catch {
-            // Share sheet dismissed.
-        }
-    }
 </script>
 
 <svelte:window onscroll={onScroll} />
@@ -93,19 +75,6 @@
                 <IconFrame {icon} size="xl" class="bg-surface-container" />
             </span>
         {/if}
-
-        <button
-            type="button"
-            onclick={share}
-            aria-label={copied ? "تم نسخ الرابط" : "مشاركة"}
-            class="pressable absolute bottom-14 start-gutter grid place-items-center w-11 h-11 rounded-full bg-surface-container text-on-surface shadow-e2"
-        >
-            {#if copied}
-                <span in:pop><AppIcon name="check" size={18} weight="bold" class="text-success" /></span>
-            {:else}
-                <AppIcon name="share" size={18} />
-            {/if}
-        </button>
     </div>
 
     <!-- Sheet lifting over the photo -->
