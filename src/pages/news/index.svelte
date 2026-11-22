@@ -1,12 +1,11 @@
 <script lang="ts">
     import EmptyState from "@/components/empty-state.svelte";
     import Skeleton from "@/components/loading/skeleton.svelte";
-    import AppIcon from "@/components/app-icon.svelte";
     import PageBanner from "@/components/ui/page-banner.svelte";
     import IconFrame from "@/components/ui/icon-frame.svelte";
     import LatticePattern from "@/assets/patterns/lattice-pattern.svelte";
     import { createQuery } from "@/hooks/create-query.svelte";
-    import { formatArabicDay, formatArabicMonth, readingLabel } from "@/utils/format.util";
+    import { formatArabicDay, formatArabicMonth } from "@/utils/format.util";
     import { reducedMotion, rise, stagger } from "@/utils/motion";
     import { go } from "@/utils/navigation";
     import { getNews } from "./service";
@@ -14,9 +13,9 @@
 
     /*
      * News as magazine cards that preview the article page: photo, a gold arch
-     * date-stamp standing on the photo's edge, then title, summary and reading
-     * time. Every story has equal weight (no featured hero). Photo, date and
-     * title share view-transition names with the article, so they morph on open.
+     * date-stamp standing on the photo's edge, then title and summary. Every story
+     * has equal weight (no featured hero). Photo, date and title share view-transition
+     * names with the article, so they morph on open.
      */
     const newsQuery = createQuery<NewsItem[]>({ key: "news-list", fetcher: getNews });
 
@@ -99,21 +98,6 @@
                             <span class="mt-1.5 block text-body text-on-surface-variant line-clamp-2"
                                 >{item.excerpt}</span
                             >
-
-                            <span
-                                class="mt-4 flex items-center justify-between gap-3 border-t border-outline-variant pt-3"
-                            >
-                                <span class="inline-flex items-center gap-1 text-caption text-on-surface-muted">
-                                    <AppIcon name="clock" size={14} />
-                                    {readingLabel(item.body)}
-                                </span>
-                                <span
-                                    class="inline-flex items-center gap-1 rounded-pill bg-primary-container px-3 py-1.5 text-caption font-bold text-primary"
-                                >
-                                    اقرأ الخبر
-                                    <AppIcon name="caret-left" size={14} weight="bold" />
-                                </span>
-                            </span>
                         </span>
                     </button>
                 </li>
