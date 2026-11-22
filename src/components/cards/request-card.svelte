@@ -1,12 +1,11 @@
 <script lang="ts">
     import AppIcon from "@/components/app-icon.svelte";
     import IconFrame from "@/components/ui/icon-frame.svelte";
-    import StatusBadge from "@/components/status-badge.svelte";
     import { STATUS_DEFINITIONS, STATUS_TOKEN_DOT } from "@/config/status.config";
     import { formatArabicDate } from "@/utils/format.util";
     import type { RequestSummary } from "@/types/requests";
 
-    /** Request summary: arch icon, title, reference, status, segmented stage progress. */
+    /** Request summary: arch icon, title, segmented stage progress. */
     interface Props {
         request: RequestSummary;
         onClick: (id: string) => void;
@@ -27,14 +26,12 @@
     onclick={() => onClick(request.id)}
     class="pressable w-full text-start rounded-card bg-surface-container p-4 shadow-e1 active:shadow-none"
 >
-    <div class="flex items-start gap-3.5">
+    <div class="flex items-center gap-3.5">
         <IconFrame icon={request.serviceIcon} size="sm" transitionName="request-icon-{request.id}" />
         <div class="flex-1 min-w-0">
-            <div class="flex items-start justify-between gap-2">
-                <p class="text-headline text-on-surface line-clamp-2">{request.serviceTitle}</p>
-                <StatusBadge status={request.status} size="sm" />
-            </div>
-            <p class="mt-1 text-caption text-on-surface-muted" dir="ltr">{request.reference}</p>
+            <p class="text-headline text-on-surface line-clamp-2">{request.serviceTitle}</p>
+            <p class="mt-1 text-caption text-on-surface-muted">{formatArabicDate(request.submittedAt)}</p>
+            <span class="sr-only">{STATUS_DEFINITIONS[request.status].label}</span>
         </div>
     </div>
 
@@ -55,9 +52,6 @@
         <span class="min-w-0 truncate text-on-surface-variant">
             <span class="tabular-nums">{doneCount}/{request.stages.length}</span> · {currentTitle}
         </span>
-        <span class="shrink-0 inline-flex items-center gap-1 text-on-surface-muted">
-            {formatArabicDate(request.submittedAt)}
-            <AppIcon name="caret-left" size={14} />
-        </span>
+        <AppIcon name="caret-left" size={14} class="shrink-0 text-on-surface-muted" />
     </div>
 </button>

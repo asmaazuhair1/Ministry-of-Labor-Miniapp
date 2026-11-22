@@ -2,10 +2,17 @@
     import EmptyState from "@/components/empty-state.svelte";
     import Skeleton from "@/components/loading/skeleton.svelte";
     import AppIcon from "@/components/app-icon.svelte";
+    import PageBanner from "@/components/ui/page-banner.svelte";
     import IconFrame from "@/components/ui/icon-frame.svelte";
     import LatticePattern from "@/assets/patterns/lattice-pattern.svelte";
     import { createQuery } from "@/hooks/create-query.svelte";
-    import { formatArabicDay, formatArabicMonth, readingLabel } from "@/utils/format.util";
+    import {
+        arabicCountNoun,
+        formatArabicDate,
+        formatArabicDay,
+        formatArabicMonth,
+        readingLabel,
+    } from "@/utils/format.util";
     import { reducedMotion, rise, stagger } from "@/utils/motion";
     import { go } from "@/utils/navigation";
     import { getNews } from "./service";
@@ -22,11 +29,18 @@
     const news = $derived(
         (newsQuery.data ?? []).slice().sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
     );
+    const NEWS_FORMS: [string, string, string, string] = [
+        "خبر من الوزارة",
+        "خبران من الوزارة",
+        "أخبار من الوزارة",
+        "خبراً من الوزارة",
+    ];
 </script>
 
 <div class="px-gutter pt-5 pb-8">
     {#if newsQuery.isLoading}
-        <div class="flex flex-col gap-5">
+        <Skeleton class="h-[92px] rounded-card" />
+        <div class="mt-5 flex flex-col gap-5">
             {#each Array(3) as _, i (i)}
                 <Skeleton class="h-[330px] rounded-hero" />
             {/each}
@@ -38,9 +52,15 @@
             description="تابعنا للاطّلاع على آخر أخبار الوزارة وفعالياتها."
         />
     {:else}
-        <ul class="flex flex-col gap-5">
+        <PageBanner
+            count={news.length}
+            title={arabicCountNoun(news.length, NEWS_FORMS)}
+            summary="آخر تحديث {formatArabicDate(news[0].date)}"
+        />
+
+        <ul class="mt-5 flex flex-col gap-5">
             {#each news as item, i (item.id)}
-                <li in:rise|global={{ delay: reducedMotion() ? 0 : stagger(i) }}>
+                <li in:rise|global={{ delay: reducedMotion() ? 0 : stagger(i + 1) }}>
                     <button
                         type="button"
                         onclick={() => go(`/news/${item.id}`)}

@@ -9,8 +9,8 @@
     /*
      * "Seal Card" greeting — a light card with a faint shanasheel watermark. The
      * ministry logo sits in an official double-ring seal, the greeting words rise
-     * one by one, the name is revealed from behind a mask with a short teal
-     * signature line under it, and the bell rings once when something is unread.
+     * one by one, the name is revealed from behind a mask, and the bell rings once
+     * when something is unread.
      * Every motion runs once and settles; reduced motion shows the final state.
      */
     interface Props {
@@ -76,8 +76,6 @@
             <h1 class="overflow-hidden text-title-2 text-on-surface">
                 <span class="block truncate" in:reveal={{ delay: reducedMotion() ? 0 : 280 }}>{name}</span>
             </h1>
-            <!-- Signature accent -->
-            <span class="mt-1.5 block h-[3px] w-8 rounded-pill bg-primary" aria-hidden="true"></span>
         </div>
 
         <button

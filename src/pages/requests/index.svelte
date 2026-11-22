@@ -4,9 +4,11 @@
     import EmptyState from "@/components/empty-state.svelte";
     import Skeleton from "@/components/loading/skeleton.svelte";
     import Tabs from "@/components/ui/tabs.svelte";
+    import PageBanner from "@/components/ui/page-banner.svelte";
     import { createQuery } from "@/hooks/create-query.svelte";
     import { duration, easing, fadeIn, reducedMotion, rise, stagger } from "@/utils/motion";
     import { go } from "@/utils/navigation";
+    import { arabicCountNoun } from "@/utils/format.util";
     import { getRequests } from "./service";
     import type { RequestStatus, RequestSummary } from "@/types/requests";
 
@@ -40,13 +42,24 @@
             .sort((a, b) => Number(NEEDS_YOU.includes(b.status)) - Number(NEEDS_YOU.includes(a.status))),
     );
 
+    const openCount = $derived(requests.filter((r) => inGroup(r, "open")).length);
+    const completedCount = $derived(requests.filter((r) => inGroup(r, "completed")).length);
+    const rejectedCount = $derived(requests.filter((r) => inGroup(r, "rejected")).length);
+    const OPEN_FORMS: [string, string, string, string] = [
+        "طلب قيد المتابعة",
+        "طلبان قيد المتابعة",
+        "طلبات قيد المتابعة",
+        "طلباً قيد المتابعة",
+    ];
+
     const flipOptions = () => ({ duration: reducedMotion() ? 0 : duration("base"), easing: easing("standard") });
     const open = (id: string) => go(`/requests/${id}`);
 </script>
 
 <div class="px-gutter pt-5 pb-6">
     {#if query.isLoading}
-        <Skeleton shape="pill" class="h-[52px] w-full" />
+        <Skeleton class="h-[92px] rounded-card" />
+        <Skeleton shape="pill" class="mt-5 h-[52px] w-full" />
         <div class="mt-5 flex flex-col gap-3">
             {#each Array(3) as _, i (i)}
                 <Skeleton class="h-[148px] rounded-card" />
@@ -61,7 +74,13 @@
             onAction={() => go("/services")}
         />
     {:else}
-        <div in:rise>
+        <PageBanner
+            count={openCount}
+            title={arabicCountNoun(openCount, OPEN_FORMS)}
+            summary="{completedCount} مكتملة · {rejectedCount} مرفوضة · {requests.length} إجمالي"
+        />
+
+        <div class="mt-5" in:rise={{ delay: stagger(1) }}>
             <Tabs items={tabs} value={group} onChange={(id) => (group = id as Group)} label="تصفية الطلبات" />
         </div>
 
@@ -73,7 +92,7 @@
                     {#each visible as request, i (request.id)}
                         <li
                             animate:flip={flipOptions()}
-                            in:rise={{ delay: stagger(i + 1) }}
+                            in:rise={{ delay: stagger(i + 2) }}
                             out:fadeIn={{ duration: duration("fast") }}
                         >
                             <RequestCard {request} onClick={open} />
