@@ -67,11 +67,11 @@
         {#if servicesQuery.isLoading}
             <div class="flex flex-col gap-3">
                 {#each Array(3) as _, i (i)}
-                    <Skeleton class="h-[104px] rounded-card" />
+                    <Skeleton class="h-[168px] rounded-card" />
                 {/each}
             </div>
         {:else}
-            <ServicesBento services={servicesQuery.data ?? []} />
+            <ServicesBento services={servicesQuery.data ?? []} categories={categoriesQuery.data ?? []} />
         {/if}
     </section>
 
