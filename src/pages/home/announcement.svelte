@@ -2,7 +2,6 @@
     import AppIcon from "@/components/app-icon.svelte";
     import EmptyState from "@/components/empty-state.svelte";
     import Skeleton from "@/components/loading/skeleton.svelte";
-    import Button from "@/components/ui/button.svelte";
     import EditorialArticle from "@/components/editorial/editorial-article.svelte";
     import { createQuery } from "@/hooks/create-query.svelte";
     import { getCategories } from "@/pages/services/service";
@@ -80,10 +79,6 @@
                     {/each}
                 </ol>
             </section>
-        {/if}
-
-        {#if item.cta}
-            <Button size="lg" block icon="caret-left" onclick={() => go(item.cta!.path)}>{item.cta.label}</Button>
         {/if}
 
         {#if others.length}

@@ -7,6 +7,11 @@
      * "Service Board" page banner — a deep-teal, full-width notice board with a faint
      * shanasheel lattice: a large live count beside its label, and a one-line summary
      * under it. Shared by the services, requests and news pages.
+     *
+     * Full-bleed: it breaks out of the page's `px-gutter pt-5` container with matching
+     * negative margins, so it touches both screen edges and sits flush under the app
+     * header; its own `px-gutter` keeps the text on the same start edge as the cards
+     * below. Straight top edge, soft radius on the bottom corners only.
      */
     interface Props {
         /** The headline number (counts up on load). */
@@ -22,7 +27,10 @@
     const { count, title, summary, label, loading = false }: Props = $props();
 </script>
 
-<section class="relative overflow-hidden rounded-card bg-primary p-4 text-on-primary shadow-e2" in:rise>
+<section
+    class="relative -mx-gutter -mt-5 overflow-hidden rounded-b-card bg-primary px-gutter pt-4 pb-5 text-on-primary shadow-e2"
+    in:rise
+>
     <LatticePattern
         tile={22}
         class="pointer-events-none absolute inset-0 w-full h-full text-on-primary opacity-[0.08]"

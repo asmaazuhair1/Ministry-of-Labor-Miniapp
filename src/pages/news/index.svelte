@@ -39,7 +39,7 @@
 
 <div class="px-gutter pt-5 pb-8">
     {#if newsQuery.isLoading}
-        <Skeleton class="h-[92px] rounded-card" />
+        <Skeleton class="-mx-gutter -mt-5 h-[92px] rounded-none rounded-b-card" />
         <div class="mt-5 flex flex-col gap-5">
             {#each Array(3) as _, i (i)}
                 <Skeleton class="h-[330px] rounded-hero" />
