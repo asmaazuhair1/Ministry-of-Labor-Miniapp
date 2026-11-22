@@ -8,9 +8,9 @@
 
     /*
      * "Soft Window" category card — light and calm. A soft-tinted panel in the
-     * category's own light shade (with a barely-there shanasheel texture and a
-     * small count chip), the emblem resting on the panel's edge in a white
-     * circle, then the name and a quiet "browse" line.
+     * category's own light shade (with a barely-there shanasheel texture), the
+     * emblem resting on the panel's edge in a white circle, then the name and the
+     * service count.
      */
     interface Props {
         category: ServiceCategory;
@@ -41,13 +41,6 @@
             tile={20}
             class="absolute inset-0 w-full h-full {ACCENT_TEXT[category.accent]} opacity-[0.08]"
         />
-        <span
-            class="absolute top-2 start-2 inline-flex items-center gap-1 rounded-pill bg-surface-container/80 px-2 py-0.5 text-caption text-on-surface-variant"
-        >
-            <span class="h-1.5 w-1.5 rounded-full {available > 0 ? 'bg-success' : 'bg-outline'}"></span>
-            <span class="tabular-nums">{total}</span>
-            {arabicCountNoun(total, FORMS)}
-        </span>
     </span>
 
     <!-- Emblem resting on the panel's edge -->
@@ -64,13 +57,15 @@
         </span>
     </span>
 
-    <!-- Name + quiet action -->
+    <!-- Name + service count -->
     <span class="mt-3 block px-1 text-headline text-on-surface line-clamp-2 min-h-[48px]">{category.title}</span>
     <span
         class="mt-2 inline-flex items-center justify-center gap-1 text-caption text-on-surface-variant"
         aria-hidden="true"
     >
-        تصفّح الخدمات
+        <span class="h-1.5 w-1.5 rounded-full {available > 0 ? 'bg-success' : 'bg-outline'}"></span>
+        <span class="tabular-nums">{total}</span>
+        {arabicCountNoun(total, FORMS)}
         <AppIcon
             name="caret-left"
             size={12}
