@@ -77,7 +77,7 @@
                         <span class="relative block px-5 pt-5 pb-5">
                             <!-- Gold arch date stamp on the photo's edge -->
                             <span
-                                class="absolute -top-12 start-5 grid w-14 h-[72px] place-content-center shape-arch bg-secondary text-center text-on-secondary ring-4 ring-surface-container shadow-e2"
+                                class="absolute -top-16 start-5 grid w-14 h-[72px] place-content-center shape-arch bg-secondary text-center text-on-secondary ring-4 ring-surface-container shadow-e2"
                                 style="view-transition-name: news-date-{item.id}"
                                 aria-hidden="true"
                             >
@@ -91,7 +91,7 @@
                             </span>
 
                             <span
-                                class="block ps-16 text-headline text-on-surface"
+                                class="block text-headline text-on-surface"
                                 style="view-transition-name: news-title-{item.id}"
                             >
                                 {item.title}
