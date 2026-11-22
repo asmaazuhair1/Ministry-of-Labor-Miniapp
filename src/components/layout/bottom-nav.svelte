@@ -56,7 +56,7 @@
 <div class="fixed bottom-0 inset-x-0 z-30 flex justify-center pointer-events-none [view-transition-name:bottom-nav]">
     <div class="w-full max-w-[480px] px-1.5" style="padding-bottom: max(12px, env(safe-area-inset-bottom))">
         <nav
-            class="pointer-events-auto relative h-[68px] rounded-frame border border-outline-variant bg-surface-container shadow-e3"
+            class="pointer-events-auto relative h-[74px] rounded-frame border border-outline-variant bg-surface-container shadow-e3"
             aria-label="التنقل الرئيسي"
         >
             <ul
