@@ -41,8 +41,8 @@
         <SectionHeader title="التصنيفات" />
         {#if categoriesQuery.isLoading}
             <div class="grid grid-cols-2 gap-3">
-                <Skeleton class="h-[236px] shape-gate" />
-                <Skeleton class="h-[236px] shape-gate" />
+                <Skeleton class="h-[224px] rounded-card" />
+                <Skeleton class="h-[224px] rounded-card" />
             </div>
         {:else}
             <div class="grid grid-cols-2 gap-3">
