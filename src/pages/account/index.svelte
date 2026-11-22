@@ -7,6 +7,7 @@
     import LatticePattern from "@/assets/patterns/lattice-pattern.svelte";
     import { createQuery } from "@/hooks/create-query.svelte";
     import { showAlert } from "@/store/alert-state";
+    import { appLanguage, setLanguage, type AppLanguage } from "@/store/language-state";
     import { pop, rise, stagger } from "@/utils/motion";
     import { getProfile } from "./service";
     import type { UserProfile } from "@/types/profile";
@@ -23,8 +24,6 @@
                   .join(" ")
             : "",
     );
-
-    let language = $state<"ar" | "ku">("ar");
 
     const SUPPORT: { label: string; icon: string }[] = [
         { label: "مركز المساعدة", icon: "life-buoy" },
@@ -88,8 +87,8 @@
                                 { id: "ar", label: "العربية" },
                                 { id: "ku", label: "کوردی" },
                             ]}
-                            value={language}
-                            onChange={(id) => (language = id as "ar" | "ku")}
+                            value={$appLanguage}
+                            onChange={(id) => setLanguage(id as AppLanguage)}
                             label="لغة التطبيق"
                             bleed={false}
                         />

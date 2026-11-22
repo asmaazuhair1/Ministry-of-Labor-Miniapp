@@ -4,6 +4,8 @@
     import BottomNav from "@/components/layout/bottom-nav.svelte";
     import Alert from "@/components/alert.svelte";
     import SplashScreen from "@/components/layout/splash-screen.svelte";
+    import LanguagePicker from "@/components/layout/language-picker.svelte";
+    import { needsLanguageChoice } from "@/store/language-state";
     import { buildRouteMap, getLayoutForRoute } from "@/config/routes.utils";
     import { fadeIn, pageSlide } from "@/utils/motion";
     import { navDirection, supportsViewTransitions } from "@/utils/navigation";
@@ -17,6 +19,12 @@
         sessionStorage.setItem(SPLASH_KEY, "1");
         showSplash = false;
     }
+
+    // First launch: after the splash, ask for the app language (once per device).
+    let showLanguage = $state(needsLanguageChoice());
+    // While the splash is up, the picker waits for it to finish before its entrance plays.
+    const languageDelay = typeof sessionStorage !== "undefined" && !sessionStorage.getItem(SPLASH_KEY) ? 2200 : 0;
+
     const layout = $derived(getLayoutForRoute($location));
 
     // View Transitions handle page motion where supported; Svelte transitions otherwise.
@@ -65,6 +73,10 @@
 </div>
 
 <Alert />
+
+{#if showLanguage}
+    <LanguagePicker delay={languageDelay} onDone={() => (showLanguage = false)} />
+{/if}
 
 {#if showSplash}
     <SplashScreen onDone={splashDone} />
