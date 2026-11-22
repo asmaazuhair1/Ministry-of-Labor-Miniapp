@@ -65,12 +65,10 @@
     <section in:rise={{ delay: stagger(2) }}>
         <SectionHeader title="الخدمات" actionLabel="الكل" onAction={() => go("/services")} />
         {#if servicesQuery.isLoading}
-            <div class="grid grid-cols-[1.2fr_1fr] gap-3">
-                <Skeleton class="h-[280px] rounded-hero" />
-                <div class="flex flex-col gap-3">
-                    <Skeleton class="flex-1 rounded-card" />
-                    <Skeleton class="flex-1 rounded-card" />
-                </div>
+            <div class="flex flex-col gap-3">
+                {#each Array(3) as _, i (i)}
+                    <Skeleton class="h-[104px] rounded-card" />
+                {/each}
             </div>
         {:else}
             <ServicesBento services={servicesQuery.data ?? []} />
