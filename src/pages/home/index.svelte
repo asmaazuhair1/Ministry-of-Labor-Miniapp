@@ -7,20 +7,31 @@
     import StorySlider from "./components/story-slider.svelte";
     import ServiceRow from "@/components/cards/service-row.svelte";
     import NewsCarousel from "./components/news-carousel.svelte";
+    import ActiveRequests from "./components/active-requests.svelte";
     import LawsList from "@/components/cards/laws-list.svelte";
     import { createQuery } from "@/hooks/create-query.svelte";
     import { getCategories, getServices } from "@/pages/services/service";
+    import { getRequests } from "@/pages/requests/service";
     import { getAnnouncements, getLaws, getNews } from "./service";
     import { DEMO_USER } from "@/config/demo/user.demo";
     import { rise, stagger } from "@/utils/motion";
     import type { ServiceCategory, ServiceSummary } from "@/types/services";
     import type { Announcement, LawDocument, NewsItem } from "@/types/content";
+    import type { RequestSummary } from "@/types/requests";
 
     const announcementsQuery = createQuery<Announcement[]>({ key: "announcements", fetcher: getAnnouncements });
     const categoriesQuery = createQuery<ServiceCategory[]>({ key: "home-categories", fetcher: getCategories });
     const servicesQuery = createQuery<ServiceSummary[]>({ key: "home-services", fetcher: getServices });
     const newsQuery = createQuery<NewsItem[]>({ key: "home-news", fetcher: getNews });
     const lawsQuery = createQuery<LawDocument[]>({ key: "home-laws", fetcher: getLaws });
+
+    const requestsQuery = createQuery<RequestSummary[]>({ key: "home-requests", fetcher: getRequests });
+    /** Open requests (not completed or rejected), newest first. */
+    const activeRequests = $derived(
+        (requestsQuery.data ?? [])
+            .filter((r) => r.status !== "completed" && r.status !== "rejected")
+            .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()),
+    );
 
     const laws = $derived((lawsQuery.data ?? []).slice(0, 4));
 </script>
@@ -35,6 +46,19 @@
             <StorySlider announcements={announcementsQuery.data} />
         {/if}
     </section>
+
+    <!-- Active requests -->
+    {#if requestsQuery.isLoading}
+        <section>
+            <SectionHeader title="طلباتي النشطة" />
+            <Skeleton class="h-[176px] rounded-card" />
+        </section>
+    {:else if activeRequests.length}
+        <section in:rise={{ delay: stagger(1) }}>
+            <SectionHeader title="طلباتي النشطة" actionLabel="الكل" onAction={() => go("/requests")} />
+            <ActiveRequests requests={activeRequests} />
+        </section>
+    {/if}
 
     <!-- Categories -->
     <section in:rise={{ delay: stagger(1) }}>
