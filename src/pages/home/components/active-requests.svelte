@@ -2,7 +2,7 @@
     import AppIcon from "@/components/app-icon.svelte";
     import IconFrame from "@/components/ui/icon-frame.svelte";
     import LatticePattern from "@/assets/patterns/lattice-pattern.svelte";
-    import { STATUS_DEFINITIONS, STATUS_TOKEN_BG, STATUS_TOKEN_DOT, STATUS_TOKEN_TEXT } from "@/config/status.config";
+    import { STATUS_DEFINITIONS, STATUS_TOKEN_DOT, STATUS_TOKEN_TEXT } from "@/config/status.config";
     import { reducedMotion, rise, stagger } from "@/utils/motion";
     import { go } from "@/utils/navigation";
     import type { RequestSummary } from "@/types/requests";
@@ -57,14 +57,6 @@
                     <IconFrame icon={request.serviceIcon} size="sm" transitionName="request-icon-{request.id}" />
                     <span class="min-w-0 flex-1">
                         <span class="block text-headline text-on-surface line-clamp-1">{request.serviceTitle}</span>
-                        <span
-                            class="mt-1 inline-flex items-center gap-1 rounded-pill px-2 py-0.5 text-caption font-bold {STATUS_TOKEN_BG[
-                                def.token
-                            ]} {STATUS_TOKEN_TEXT[def.token]}"
-                        >
-                            <AppIcon name={def.icon} size={12} weight="bold" />
-                            {def.label}
-                        </span>
                     </span>
                     <AppIcon name="caret-left" size={16} class="shrink-0 text-on-surface-muted" />
                 </span>
